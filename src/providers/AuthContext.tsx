@@ -17,32 +17,53 @@ const AuthContext = createContext<AuthContextData | undefined>(undefined);
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean|null>(null);
   const router = useRouter();
+  const baseurl = process.env.NEXT_PUBLIC_BASE_URL;
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
-      setIsAuthenticated(true);
-    } else {
-      router.push('/');
-      setIsAuthenticated(false);
+
+    const checkTokenValidity = async () => {
+      try {
+
+        const response:any = await axios.post(
+          `${baseurl}/api/auth/token`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+          if (response.data.user) {
+            setIsAuthenticated(true);
+          } else {
+            logout();
+          }
+        } catch (error) {
+          console.error('Erro:', error);
+        }
     }
+
+    if(token){
+      checkTokenValidity();
+    } else {
+      setIsAuthenticated(false);
+      router.push('/');
+    }
+
   }, []);
 
   const login = async(credentials:any) => {
     try {
-        const response = await axios.post('http://localhost:3000/api/auth', credentials);
+        const response = await axios.post(`${baseurl}/api/auth`, credentials);
 
-        if (response.status === 200) {
-
-          localStorage.setItem('token', response.data.token);
+        localStorage.setItem('token', response.data.token);
           setIsAuthenticated(true);
           router.push('/');
-
-        } else {
-          console.error('Falha na autenticação');
-        }
-      } catch (error) {
-        console.error('Erro ao autenticar', error);
+      } catch (error:any) {
+        console.error('Erro ao autenticar', error.request.response);
+        throw error.request.response;
       }
   };
 

@@ -43,9 +43,13 @@ import FooterIllustrationsV1 from 'src/views/pages/auth/FooterIllustration'
 import { useAuth } from "src/providers/AuthContext"
 
 
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 interface Form {
   email: string,
-  password: string
+  password: string,
+  remember:boolean
 }
 
 // ** Styled Components
@@ -72,13 +76,23 @@ const LoginPage = () => {
 
   const [values, setValues] = useState<Form>({
     email: '',
-    password: ''
+    password: '',
+    remember: false
   })
 
   const [showPassword, setShowPassword] = useState<Boolean>(false)
 
-  const handleLogin = () => {
-    login(values);
+  const handleLogin = async() => {
+    try {
+      await login(values);
+    } catch (error:any) {
+      console.log(error)
+      toast.error(JSON.parse(error).errors[0].message || 'Erro desconhecido', {
+        position: toast.POSITION.TOP_RIGHT,
+        theme: "colored"
+      });
+    }
+  
     };
 
   // ** Hook
@@ -86,7 +100,7 @@ const LoginPage = () => {
   const router = useRouter()
 
   const handleChange = (prop: keyof Form) => (event: ChangeEvent<HTMLInputElement>) => {
-    setValues({ ...values, [prop]: event.target.value })
+    setValues({ ...values, [prop]: prop == 'remember'?  event.target.checked : event.target.value })
   }
 
   const handleClickShowPassword = () => {
@@ -148,7 +162,7 @@ const LoginPage = () => {
             <Box
               sx={{ mb: 4, display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}
             >
-              <FormControlLabel control={<Checkbox />} label='Remember Me'/>
+              <FormControlLabel control={<Checkbox checked={values.remember} onChange={handleChange('remember')}/>} label='Remember Me'/>
             </Box>
             <Button
               fullWidth
@@ -156,13 +170,13 @@ const LoginPage = () => {
               variant='contained'
               sx={{ marginBottom: 7 }}
               onClick={handleLogin}
-            >
-              Login
+            > Login
             </Button>
           </form>
         </CardContent>
       </Card>
       <FooterIllustrationsV1 />
+      <ToastContainer />
     </Box>
   )
 }
