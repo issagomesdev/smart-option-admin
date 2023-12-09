@@ -8,6 +8,7 @@ interface AuthProviderProps {
 
 interface AuthContextData {
   isAuthenticated: boolean|null;
+  user:any;
   login: (credentials: { email: string; password: string }) => Promise<void>;
   logout: () => void;
 }
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextData | undefined>(undefined);
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean|null>(null);
+  const [user, setUser] = useState<any>({});
   const router = useRouter();
   const baseurl = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -36,6 +38,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         );
 
           if (response.data.user) {
+            setUser(response.data.user);
             setIsAuthenticated(true);
           } else {
             logout();
@@ -49,6 +52,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       checkTokenValidity();
     } else {
       setIsAuthenticated(false);
+      setUser({});
       router.push('/');
     }
 
@@ -57,10 +61,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async(credentials:any) => {
     try {
         const response = await axios.post(`${baseurl}/api/auth`, credentials);
-
+        setUser(response.data.user);
         localStorage.setItem('token', response.data.token);
-          setIsAuthenticated(true);
-          router.push('/');
+        setIsAuthenticated(true);
+        router.push('/');
       } catch (error:any) {
         console.error('Erro ao autenticar', error.request.response);
         throw error.request.response;
@@ -70,11 +74,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('token');
     setIsAuthenticated(false);
+    setUser({});
     router.push('/');
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

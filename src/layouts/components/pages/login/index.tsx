@@ -86,7 +86,6 @@ const LoginPage = () => {
     try {
       await login(values);
     } catch (error:any) {
-      console.log(error)
       toast.error(JSON.parse(error).errors[0].message || 'Erro desconhecido', {
         position: toast.POSITION.TOP_RIGHT,
         theme: "colored"

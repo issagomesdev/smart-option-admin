@@ -20,6 +20,9 @@ import EyeOutline from 'mdi-material-ui/EyeOutline'
 import KeyOutline from 'mdi-material-ui/KeyOutline'
 import EyeOffOutline from 'mdi-material-ui/EyeOffOutline'
 import LockOpenOutline from 'mdi-material-ui/LockOpenOutline'
+import { ToastContainer, toast } from 'react-toastify';
+import { useAuth } from "src/providers/AuthContext"
+import { updatePass } from "src/services/user.service"
 
 interface State {
   newPassword: string
@@ -32,14 +35,39 @@ interface State {
 
 const TabSecurity = () => {
   // ** States
+  const { user } = useAuth();
   const [values, setValues] = useState<State>({
     newPassword: '',
     currentPassword: '',
-    showNewPassword: false,
     confirmNewPassword: '',
+    showNewPassword: false,
     showCurrentPassword: false,
     showConfirmNewPassword: false
   })
+
+  const submit = async() => {
+    try {
+      if(values.newPassword === values.confirmNewPassword){
+        await updatePass({newPassword: values.newPassword, currentPassword: values.currentPassword, userId: user.id});
+        toast.success("Senha atualizada com sucesso!", {
+          position: toast.POSITION.TOP_RIGHT,
+          theme: "colored"
+        });
+        setValues({ ...values, currentPassword: '', newPassword: '', confirmNewPassword: '' });
+      } else {
+        toast.error("As senhas que você digitou não correspondem. Certifique-se de digitá-las novamente com atenção, garantindo que estejam iguais", {
+          position: toast.POSITION.TOP_RIGHT,
+          theme: "colored"
+        });
+      }
+    } catch (error:any) {
+      toast.error(error.response.data.errors[0].message, {
+        position: toast.POSITION.TOP_RIGHT,
+        theme: "colored"
+      });
+    }
+  
+    };
 
   // Handle Current Password
   const handleCurrentPasswordChange = (prop: keyof State) => (event: ChangeEvent<HTMLInputElement>) => {
@@ -82,9 +110,9 @@ const TabSecurity = () => {
             <Grid container spacing={5}>
               <Grid item xs={12} sx={{ marginTop: 4.75 }}>
                 <FormControl fullWidth>
-                  <InputLabel htmlFor='account-settings-current-password'>Current Password</InputLabel>
+                  <InputLabel htmlFor='account-settings-current-password'>Senha Atual</InputLabel>
                   <OutlinedInput
-                    label='Current Password'
+                    label='Senha Atual'
                     value={values.currentPassword}
                     id='account-settings-current-password'
                     type={values.showCurrentPassword ? 'text' : 'password'}
@@ -107,9 +135,9 @@ const TabSecurity = () => {
 
               <Grid item xs={12} sx={{ marginTop: 6 }}>
                 <FormControl fullWidth>
-                  <InputLabel htmlFor='account-settings-new-password'>New Password</InputLabel>
+                  <InputLabel htmlFor='account-settings-new-password'>Nova Senha</InputLabel>
                   <OutlinedInput
-                    label='New Password'
+                    label='Nova Senha'
                     value={values.newPassword}
                     id='account-settings-new-password'
                     onChange={handleNewPasswordChange('newPassword')}
@@ -132,9 +160,9 @@ const TabSecurity = () => {
 
               <Grid item xs={12}>
                 <FormControl fullWidth>
-                  <InputLabel htmlFor='account-settings-confirm-new-password'>Confirm New Password</InputLabel>
+                  <InputLabel htmlFor='account-settings-confirm-new-password'>Repetir Nova Senha</InputLabel>
                   <OutlinedInput
-                    label='Confirm New Password'
+                    label='Repetir Nova Senha'
                     value={values.confirmNewPassword}
                     id='account-settings-confirm-new-password'
                     type={values.showConfirmNewPassword ? 'text' : 'password'}
@@ -156,54 +184,13 @@ const TabSecurity = () => {
               </Grid>
             </Grid>
           </Grid>
-
-          <Grid
-            item
-            sm={6}
-            xs={12}
-            sx={{ display: 'flex', marginTop: [7.5, 2.5], alignItems: 'center', justifyContent: 'center' }}
-          >
-            <img width={183} alt='avatar' height={256} src='/images/pages/pose-m-1.png' />
-          </Grid>
         </Grid>
       </CardContent>
 
-      <Divider sx={{ margin: 0 }} />
 
       <CardContent>
-        <Box sx={{ mt: 1.75, display: 'flex', alignItems: 'center' }}>
-          <KeyOutline sx={{ marginRight: 3 }} />
-          <Typography variant='h6'>Two-factor authentication</Typography>
-        </Box>
-
-        <Box sx={{ mt: 5.75, display: 'flex', justifyContent: 'center' }}>
-          <Box
-            sx={{
-              maxWidth: 368,
-              display: 'flex',
-              textAlign: 'center',
-              alignItems: 'center',
-              flexDirection: 'column'
-            }}
-          >
-            <Avatar
-              variant='rounded'
-              sx={{ width: 48, height: 48, color: 'common.white', backgroundColor: 'primary.main' }}
-            >
-              <LockOpenOutline sx={{ fontSize: '1.75rem' }} />
-            </Avatar>
-            <Typography sx={{ fontWeight: 600, marginTop: 3.5, marginBottom: 3.5 }}>
-              Two factor authentication is not enabled yet.
-            </Typography>
-            <Typography variant='body2'>
-              Two-factor authentication adds an additional layer of security to your account by requiring more than just
-              a password to log in. Learn more.
-            </Typography>
-          </Box>
-        </Box>
-
         <Box sx={{ mt: 11 }}>
-          <Button variant='contained' sx={{ marginRight: 3.5 }}>
+          <Button variant='contained' sx={{ marginRight: 3.5 }} onClick={() => submit()}>
             Save Changes
           </Button>
           <Button
@@ -216,6 +203,7 @@ const TabSecurity = () => {
           </Button>
         </Box>
       </CardContent>
+      <ToastContainer />
     </form>
   )
 }
