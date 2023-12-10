@@ -17,11 +17,18 @@ import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
-import DeleteIcon from '@mui/icons-material/Delete';
+import Link from '@mui/material/Link';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
 import { botUsers } from "src/services/user.service";
 import { useEffect } from 'react';
+import themeConfig from "src/configs/themeConfig";
+import DefaultPalette from "src/@core/theme/palette";
+import { PuffLoader } from 'react-spinners';
+import BlankLayout from "src/@core/layouts/BlankLayout";
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 
 interface Data {
   id: number,
@@ -30,30 +37,11 @@ interface Data {
   plan: string,
   telegram: string,
   status: number,
-  created_at: string
+  created_at: string,
+  actions: string
 }
+type Plans = 'bronze' | 'silver' | 'gold' | 'without';
 
-function createData(
-  id: number,
-  name: string,
-  email: string,
-  plan: string,
-  telegram: string,
-  status: number,
-  created_at: string
-): Data {
-  return {
-    id,
-    name,
-    email,
-    plan,
-    telegram,
-    status,
-    created_at
-  };
-}
-
-const rows:Data[] = [];
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -145,19 +133,23 @@ const headCells: readonly HeadCell[] = [
     disablePadding: false,
     label: 'Cadastrado em',
   },
+  {
+    id: 'actions',
+    numeric: false,
+    disablePadding: false,
+    label: 'Ações',
+  },
 ];
 
 interface EnhancedTableProps {
-  numSelected: number;
   onRequestSort: (event: React.MouseEvent<unknown>, property: keyof Data) => void;
-  onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void;
   order: Order;
   orderBy: string;
   rowCount: number;
 }
 
 function EnhancedTableHead(props: EnhancedTableProps) {
-  const { onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort } =
+  const { order, orderBy, rowCount, onRequestSort } =
     props;
   const createSortHandler =
     (property: keyof Data) => (event: React.MouseEvent<unknown>) => {
@@ -167,17 +159,6 @@ function EnhancedTableHead(props: EnhancedTableProps) {
   return (
     <TableHead>
       <TableRow>
-        <TableCell padding="checkbox">
-          <Checkbox
-            color="primary"
-            indeterminate={numSelected > 0 && numSelected < rowCount}
-            checked={rowCount > 0 && numSelected === rowCount}
-            onChange={onSelectAllClick}
-            inputProps={{
-              'aria-label': 'select all desserts',
-            }}
-          />
-        </TableCell>
         {headCells.map((headCell) => (
           <TableCell
             key={headCell.id}
@@ -208,39 +189,22 @@ interface EnhancedTableToolbarProps {
   numSelected: number;
 }
 
-function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
-  const { numSelected } = props;
-
+function EnhancedTableToolbar() {
   return (
     <Toolbar
       sx={{
         pl: { sm: 10 },
         pr: { xs: 1, sm: 1 },
-        ...(numSelected > 0 && {
-          bgcolor: (theme) =>
-            alpha(theme.palette.primary.main, theme.palette.action.activatedOpacity),
-        }),
       }}
     >
-      {numSelected > 0 ? (
-        <Typography
-          sx={{ flex: '1 1 100%' }}
-          color="inherit"
-          variant="subtitle1"
-          component="div"
-        >
-          {numSelected} selected
-        </Typography>
-      ) : (
-        <Typography
+      <Typography
           sx={{ flex: '1 1 100%' }}
           variant="h6"
           id="tableTitle"
           component="div"
         >
           Usuários 
-        </Typography>
-      )}
+      </Typography>
       <Tooltip title="Filter list">
           <IconButton>
             <FilterListIcon />
@@ -255,25 +219,36 @@ export default function EnhancedTable() {
   const [selected, setSelected] = React.useState<readonly number[]>([]);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [rows, setRows] = React.useState<Data[]>([]);
+  const [actions, setActions] = React.useState(null);
+
+  const handleActions = (event:any = null) => {
+    event? setActions(event.currentTarget) : setActions(null);
+  };
 
   useEffect(() => {
 
-    const users = async () => {
-      try {
+    botUsers().then(data => {
+      const res = data.data.map(function(user:any) {
+        return {id: user.id, name: user.name, email: user.email, plan: user.plan, telegram: user.telegram, status: user.status, created_at: user.created_at};
+      });
   
-        const res = await botUsers();
-        res.data.map(((user:any) => {
-          rows.push(createData(user.id, user.name, user.email, user.plan, user.telegram, user.status, user.created_at))
-        }))
+      setRows(res)
   
-        } catch (error) {
-          console.error('Erro:', error);
-        }
-    }
-  
-    users()
-  
+    });
+
   }, []);
+
+  
+
+  let visibleRows = React.useMemo(
+    () =>
+      stableSort(rows, getComparator(order, orderBy)).slice(
+        page * rowsPerPage,
+        page * rowsPerPage + rowsPerPage,
+      ),
+    [order, rows, orderBy, page, rowsPerPage],
+  );
 
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
@@ -321,27 +296,33 @@ export default function EnhancedTable() {
     setPage(0);
   };
 
-
-
   const isSelected = (id: number) => selected.indexOf(id) !== -1;
 
   // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
-  const visibleRows = React.useMemo(
-    () =>
-      stableSort(rows, getComparator(order, orderBy)).slice(
-        page * rowsPerPage,
-        page * rowsPerPage + rowsPerPage,
-      ),
-    [order, orderBy, page, rowsPerPage],
-  );
+  if (rows.length <= 0) {
+    return <BlankLayout>
+      <Box className='content-center'>
+        <PuffLoader
+          size={100}
+          color={DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient}
+          cssOverride={{
+            display: "block",
+            margin: "1",
+            borderColor: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient,
+          }}
+          speedMultiplier={0.8}
+        />
+      </Box>
+    </BlankLayout>
+  }
 
   return (
     <Box sx={{ width: '100%' }}>
       <Paper sx={{ width: '100%', mb: 2 }}>
-        <EnhancedTableToolbar numSelected={selected.length} />
+        <EnhancedTableToolbar/>
         <TableContainer>
           <Table
             sx={{ minWidth: 750 }}
@@ -349,46 +330,96 @@ export default function EnhancedTable() {
             size={"medium"}
           >
             <EnhancedTableHead
-              numSelected={selected.length}
               order={order}
               orderBy={orderBy}
-              onSelectAllClick={handleSelectAllClick}
               onRequestSort={handleRequestSort}
               rowCount={rows.length}
             />
             <TableBody>
               {visibleRows.map((row, index) => {
-                const isItemSelected = isSelected(row.id);
-                const labelId = `enhanced-table-checkbox-${index}`;
-
                 return (
                   <TableRow
                     hover
-                    onClick={(event) => handleClick(event, row.id)}
                     role="checkbox"
-                    aria-checked={isItemSelected}
                     tabIndex={-1}
                     key={row.id}
-                    selected={isItemSelected}
                     sx={{ cursor: 'pointer' }}
                   >
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        color="primary"
-                        checked={isItemSelected}
-                        inputProps={{
-                          'aria-labelledby': labelId,
-                        }}
-                      />
-                    </TableCell>
                     
                     <TableCell>{row.id}</TableCell>
                     <TableCell>{row.name}</TableCell>
                     <TableCell>{row.email}</TableCell>
-                    <TableCell>{row.plan}</TableCell>
-                    <TableCell>{row.telegram || 'deslogado'}</TableCell>
-                    <TableCell>{row.status? 'Ativo' : 'Inativo'}</TableCell>
+                    <TableCell>
+                      <Box
+                      bgcolor={DefaultPalette(themeConfig.mode, 'primary').customColors[row.plan as Plans]}
+                      borderRadius={16}
+                      textAlign="center"
+                      color="white">
+                        {row.plan == 'without'? 'nenhum' : row.plan}
+                      </Box>
+                    </TableCell>
+                    <TableCell>{row.telegram == 'off'? 
+                      <Box
+                      bgcolor={DefaultPalette(themeConfig.mode, 'primary').error.dark}
+                      borderRadius={16}
+                      textAlign="center"
+                      color="white">
+                        desligado
+                      </Box> : 
+                    <Link
+                    bgcolor={DefaultPalette(themeConfig.mode, 'primary').primary.light}
+                    borderRadius={16}
+                    textAlign="center"
+                    paddingX={3}
+                    paddingY={0.4}
+                    color="white"
+                    href={"https://web.telegram.org/k/#@"+row.telegram}
+                    underline="hover"
+                    >
+                      {row.telegram} 
+                    </Link>
+                    }</TableCell>
+                    <TableCell>{row.status? 
+                      <Box
+                      bgcolor={DefaultPalette(themeConfig.mode, 'primary').success.light}
+                      borderRadius={16}
+                      textAlign="center"
+                      color="white">
+                        Ativo
+                      </Box> : 
+                      <Box
+                      bgcolor={DefaultPalette(themeConfig.mode, 'primary').error.main}
+                      borderRadius={16}
+                      textAlign="center"
+                      color="white">
+                        Inativo
+                      </Box>
+                    }</TableCell>
                     <TableCell>{row.created_at}</TableCell>
+                    <TableCell>
+                      <IconButton
+                      edge="end"
+                      color="inherit"
+                      aria-label="menu"
+                      aria-haspopup="true"
+                      onClick={handleActions}>
+                        <MoreVertIcon/>
+                      </IconButton>
+                        <Menu
+                        anchorEl={actions}
+                        open={Boolean(actions)}
+                        PaperProps={{
+                          style: {
+                            boxShadow: 'rgb(0 0 0 / 5%) 0px 0px 6px',
+                          },
+                        }}
+                        onClose={() => handleActions(null)}>
+                          <MenuItem>Detalhes</MenuItem>
+                          <MenuItem>Rede</MenuItem>
+                          <MenuItem>Extrato</MenuItem>
+                          <MenuItem>Solicitações</MenuItem>
+                        </Menu>
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -405,7 +436,7 @@ export default function EnhancedTable() {
           </Table>
         </TableContainer>
         <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
+          rowsPerPageOptions={[5, 10, 25, 100]}
           component="div"
           count={rows.length}
           rowsPerPage={rowsPerPage}

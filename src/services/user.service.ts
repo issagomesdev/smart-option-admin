@@ -17,7 +17,7 @@ export const editAccount = async(values:any) => {
 
           return response
         } catch (error:any) {
-            throw error
+            console.error(error)
         }
 }
 
@@ -37,7 +37,7 @@ export const updatePass = async(values:any) => {
 
           return response
         } catch (error:any) {
-            throw error
+            console.error(error)
         }
 }
 
@@ -57,6 +57,6 @@ export const botUsers = async() => {
 
         return response
       } catch (error:any) {
-          throw error
+          console.error(error)
       }
 }

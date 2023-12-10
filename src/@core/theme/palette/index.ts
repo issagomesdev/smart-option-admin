@@ -28,7 +28,11 @@ const DefaultPalette = (mode: PaletteMode, themeColor: ThemeColor) => {
     customColors: {
       main: mainColor,
       primaryGradient: primaryGradient(),
-      tableHeaderBg: mode === 'light' ? '#F9FAFC' : '#3D3759'
+      tableHeaderBg: mode === 'light' ? '#F9FAFC' : '#3D3759',
+      bronze: '#cd7f32',
+      silver: '#999999',
+      gold: '#ffd452',
+      without: '#9b6b68'
     },
     common: {
       black: '#000',
