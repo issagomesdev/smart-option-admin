@@ -20,7 +20,7 @@ import Switch from '@mui/material/Switch';
 import Link from '@mui/material/Link';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
-import { botUsers } from "src/services/user.service";
+import { extract } from "src/services/financial.service";
 import { useEffect } from 'react';
 import themeConfig from "src/configs/themeConfig";
 import DefaultPalette from "src/@core/theme/palette";
@@ -33,15 +33,12 @@ import { useRouter } from 'next/router';
 
 interface Data {
   id: number,
-  name: string,
-  email: string,
-  plan: string,
-  telegram: string,
-  status: number,
+  value: string,
+  origin: string,
+  type: string,
   created_at: string,
-  actions: string
+  reference_id: string,
 }
-type Plans = 'bronze' | 'silver' | 'gold' | 'without';
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -94,47 +91,23 @@ const headCells: readonly HeadCell[] = [
     label: 'ID',
   },
   {
-    id: 'name',
+    id: 'value',
     numeric: false,
     disablePadding: true,
-    label: 'Nome',
+    label: 'Valor',
   },
   {
-    id: 'email',
+    id: 'origin',
     numeric: false,
     disablePadding: false,
-    label: 'Email',
-  },
-  {
-    id: 'plan',
-    numeric: false,
-    disablePadding: false,
-    label: 'Plano',
-  },
-  {
-    id: 'telegram',
-    numeric: false,
-    disablePadding: false,
-    label: 'Telegram',
-  },
-  {
-    id: 'status',
-    numeric: true,
-    disablePadding: false,
-    label: 'Situação',
+    label: 'Origem',
   },
   {
     id: 'created_at',
     numeric: false,
     disablePadding: false,
-    label: 'Cadastrado em',
-  },
-  {
-    id: 'actions',
-    numeric: false,
-    disablePadding: false,
-    label: 'Ações',
-  },
+    label: 'Data',
+  }
 ];
 
 interface EnhancedTableProps {
@@ -145,8 +118,7 @@ interface EnhancedTableProps {
 }
 
 function EnhancedTableHead(props: EnhancedTableProps) {
-  const { order, orderBy, rowCount, onRequestSort } =
-    props;
+  const { order, orderBy, rowCount, onRequestSort } = props;
   const createSortHandler =
     (property: keyof Data) => (event: React.MouseEvent<unknown>) => {
       onRequestSort(event, property);
@@ -181,11 +153,8 @@ function EnhancedTableHead(props: EnhancedTableProps) {
   );
 }
 
-interface EnhancedTableToolbarProps {
-  numSelected: number;
-}
-
-function EnhancedTableToolbar() {
+function EnhancedTableToolbar(props: any) {
+    const { balance } = props;
   return (
     <Toolbar
       sx={{
@@ -193,41 +162,42 @@ function EnhancedTableToolbar() {
         pr: { xs: 1, sm: 1 },
       }}
     >
-      <Typography
-          sx={{ flex: '1 1 100%' }}
-          variant="h6"
-          id="tableTitle"
-          component="div"
-        >
-          Usuários 
-      </Typography>
-      <Tooltip title="Filter list">
-          <IconButton>
-            <FilterListIcon />
-          </IconButton>
-        </Tooltip>
+    <Typography
+        sx={{ flex: '1 1 100%' }}
+        variant="h6"
+        id="tableTitle"
+        component="div"
+      >
+        Saldo Atual R$ {balance}
+    </Typography>
     </Toolbar>
   );
 }
-export default function Users() {
+
+interface ExtractProps {
+    userID?: string;
+    sx:any
+}
+
+export const Extract: React.FC<ExtractProps> = ({ userID, sx }) => {
   const [order, setOrder] = React.useState<Order>('asc');
   const [orderBy, setOrderBy] = React.useState<keyof Data>('id');
   const [selected, setSelected] = React.useState<readonly number[]>([]);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [rows, setRows] = React.useState<Data[]>([]);
-  const [actions, setActions] = React.useState<null | HTMLElement>(null); 
-  const [id, setId] = React.useState<any>({}); 
+  const [balance, setBalance] = React.useState<string>(); 
   const router = useRouter();
 
   useEffect(() => {
 
-    botUsers().then(data => {
-      const res = data.data.map(function(user:any) {
-        return {id: user.id, name: user.name, email: user.email, plan: user.plan, telegram: user.telegram, status: user.status, created_at: user.created_at};
+    extract(userID).then(data => {
+      const res = data.data.extract.map(function(register:any) {
+        return {id: register.id, value: register.value, reference_id: register.reference_id, type: register.type, origin: register.origin, created_at: register.created_at };
       });
   
-      setRows(res)
+      setRows(res);
+      setBalance(`${data.data.balance}`);
   
     }).catch(error => console.error(error));
 
@@ -315,9 +285,8 @@ export default function Users() {
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Paper sx={{ width: '100%', mb: 2 }}>
-        <EnhancedTableToolbar/>
-        <TableContainer>
+        <EnhancedTableToolbar balance={balance}/>
+        <TableContainer sx={sx}>
           <Table
             sx={{ minWidth: 750 }}
             aria-labelledby="tableTitle"
@@ -342,76 +311,9 @@ export default function Users() {
                   >
                     
                     <TableCell>{row.id}</TableCell>
-                    <TableCell>{row.name}</TableCell>
-                    <TableCell>{row.email}</TableCell>
-                    <TableCell>
-                      <Box
-                      bgcolor={DefaultPalette(themeConfig.mode, 'primary').customColors[row.plan as Plans]}
-                      borderRadius={16}
-                      textAlign="center"
-                      color="white">
-                        {row.plan == 'without'? 'nenhum' : row.plan}
-                      </Box>
-                    </TableCell>
-                    <TableCell>{row.telegram == 'off'? 
-                      <Box
-                      bgcolor={DefaultPalette(themeConfig.mode, 'primary').error.dark}
-                      borderRadius={16}
-                      textAlign="center"
-                      color="white">
-                        desligado
-                      </Box> : 
-                    <Link
-                    bgcolor={DefaultPalette(themeConfig.mode, 'primary').primary.light}
-                    borderRadius={16}
-                    textAlign="center"
-                    paddingX={3}
-                    paddingY={0.4}
-                    color="white"
-                    href={"https://web.telegram.org/k/#@"+row.telegram}
-                    underline="hover"
-                    >
-                      {row.telegram} 
-                    </Link>
-                    }</TableCell>
-                    <TableCell>{row.status? 
-                      <Box
-                      bgcolor={DefaultPalette(themeConfig.mode, 'primary').success.light}
-                      borderRadius={16}
-                      textAlign="center"
-                      color="white">
-                        Ativo
-                      </Box> : 
-                      <Box
-                      bgcolor={DefaultPalette(themeConfig.mode, 'primary').error.main}
-                      borderRadius={16}
-                      textAlign="center"
-                      color="white">
-                        Inativo
-                      </Box>
-                    }</TableCell>
+                    <TableCell>{row.type == 'sum'? '+' : '-'} {row.value}</TableCell>
+                    <TableCell>{row.origin == "deposit"? "Depósito" : row.origin == "withdraw"? "Saque" : row.origin == "earnings"? "Ganhos": row.origin == "profitability"? `B.R.#${row.reference_id}` : row.origin == "subscription"? `${row.type == "sum"? `B.A.#${row.reference_id}` : 'Adesão'}` : row.origin == "tuition"? `${row.type == "sum"? `B.M.#${row.reference_id}` : 'Mensalidade'}` : "Outros"}</TableCell>
                     <TableCell>{row.created_at}</TableCell>
-                    <TableCell>
-                      <IconButton
-                      edge="end"
-                      color="inherit"
-                      aria-label="menu"
-                      aria-haspopup="true"
-                      onClick={(event) =>{setActions(event.currentTarget as HTMLElement); setId(row.id) }}>
-                        <MoreVertIcon/>
-                      </IconButton>
-                        <Menu
-                        anchorEl={actions}
-                        open={Boolean(actions)}
-                        PaperProps={{
-                          style: {
-                            boxShadow: 'rgb(0 0 0 / 5%) 0px 0px 6px',
-                          },
-                        }}
-                        onClose={() => setActions(null)}>
-                          <MenuItem onClick={() => router.push(`/users/view/${id}`)}> Visualizar </MenuItem>
-                        </Menu>
-                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -436,7 +338,6 @@ export default function Users() {
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
-      </Paper>
     </Box>
   );
 }

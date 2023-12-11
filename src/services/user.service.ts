@@ -60,3 +60,21 @@ export const botUsers = async() => {
           console.error(error)
       }
 }
+
+export const botUser = async(id:string) => {
+  try {
+      const token = localStorage.getItem('token');
+      const response:any = await axios.get(
+        `${baseurl}/api/users/user-bot/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+        return response
+      } catch (error:any) {
+          console.error(error)
+      }
+}

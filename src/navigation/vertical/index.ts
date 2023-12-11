@@ -1,8 +1,5 @@
 // ** Icon imports
-import HomeCircleOutline from 'mdi-material-ui/HomeCircleOutline'
-import AccountGroup from 'mdi-material-ui/AccountGroup'
-import ShieldAccount  from 'mdi-material-ui/ShieldAccount';
-import BriefcaseVariant  from 'mdi-material-ui/BriefcaseVariant';
+import {HomeCircleOutline, AccountGroup, ShieldAccount, BriefcaseVariant, }  from 'mdi-material-ui';
 
 // ** Type import
 import { VerticalNavItemsType } from 'src/@core/layouts/types'
@@ -17,7 +14,7 @@ const navigation = (): VerticalNavItemsType => {
     {
       title: 'Admin',
       icon: ShieldAccount,
-      path: '/'
+      path: '/admin'
     },
     {
       title: 'Usuários',
@@ -27,7 +24,7 @@ const navigation = (): VerticalNavItemsType => {
     {
       title: 'Solicitações',
       icon: BriefcaseVariant,
-      path: '/'
+      path: '/requests'
     }
   ]
 }

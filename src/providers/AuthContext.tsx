@@ -11,6 +11,7 @@ interface AuthContextData {
   user:any;
   login: (credentials: { email: string; password: string }) => Promise<void>;
   logout: () => void;
+  token: () => string|null;
 }
 
 const AuthContext = createContext<AuthContextData | undefined>(undefined);
@@ -78,8 +79,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     router.push('/');
   };
 
+  const token = () => {
+    const token = localStorage.getItem('token');
+    if(!token) logout();
+    return token;
+  }
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, token }}>
       {children}
     </AuthContext.Provider>
   );
