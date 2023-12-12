@@ -21,36 +21,46 @@ import Grid from '@mui/material/Grid';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import Modal from '@mui/material/Modal';
 import { Extract } from "src/layouts/components/pages/requests/extract";
+import { Network } from "src/layouts/components/pages/requests/network";
+import { Withdrawal } from "src/layouts/components/pages/requests/withdrawal";
+import { useAuth } from "src/providers/AuthContext"
 
 type Plans = 'bronze' | 'silver' | 'gold' | 'without';
 
 interface Requests {
+  id: number;
   name: string;
-  icon: any
+  icon: any;
 }
 
 const requests:Requests[] = [
   {
+    id: 1,
     name: 'Extrato',
     icon: <CashRegister sx={{ fontSize: 60 }}/>
   },
   {
+    id: 2,
     name: 'Rede',
     icon: <AccountNetwork sx={{ fontSize: 60 }}/>
   },
   {
+    id: 3,
     name: 'Solicitações de saque',
     icon: <CashMinus sx={{ fontSize: 60 }}/>
   },
   {
+    id: 4,
     name: 'Solicitações de depósito',
     icon: <CashPlus sx={{ fontSize: 60 }}/>
   },
   {
+    id: 5,
     name: 'Solicitações de suporte',
     icon: <FaceAgent sx={{ fontSize: 60 }}/>
   },
   {
+    id: 6,
     name: 'Solicitações de adesão',
     icon: <CartArrowDown sx={{ fontSize: 60 }}/>
   },
@@ -58,12 +68,14 @@ const requests:Requests[] = [
   const View: React.FC = () => {
   const [data, setData] = React.useState<any>(null);
   const [open, setOpen] = React.useState(false);
+  const [renderItem, setRenderItem] = React.useState<number>();
   const router = useRouter();
   const { view } = router.query;
   const isSmallerThan809 = useMediaQuery('(max-width:808px)');
+  const { token } = useAuth();
 
   useEffect(() => {
-    botUser(view as string).then(data => {
+    botUser(view as string, token()).then(data => {
       setData(data.data);
     }).catch(error => console.error(error));
 
@@ -183,7 +195,7 @@ const requests:Requests[] = [
         <Box sx={{ width: '100%',  marginY: '1em', flexGrow: 1 }}>
           <Grid container spacing={2} sx={{ height: '100%' }} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
           {requests.map((request, index) => {
-            return ( <Grid item xs={isSmallerThan809 ? 6 : 4} onClick={() => setOpen(true)}>
+            return ( <Grid item xs={isSmallerThan809 ? 6 : 4} onClick={() => {setOpen(true); setRenderItem(request.id)}} sx={{cursor: 'pointer'}}>
               <Paper sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px' }}>
                 {request.icon}
               <Typography sx={{ textAlign: 'center' }}> {request.name} </Typography>
@@ -196,15 +208,14 @@ const requests:Requests[] = [
 
       </Box>
 
-      <Modal open={open}>
-        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center'}}>
-          <Paper sx={{ position: 'relative', minWidth: '70%', padding: '10px', margin: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center'  }}>         
-            <Extract userID={view as string} sx={{maxHeight: 450, overflowY:'scroll'}}/>
+      <Modal open={open}  sx={{ width: '100%', display: 'flex', justifyContent: 'center'}}>
+          <Paper sx={{ position: 'relative', minWidth: '70%', padding: '30px', margin: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY:'auto'}}>         
+            { renderItem == 1? <Extract userID={view as string} sx={{overflowY:'auto', maxHeight: 450 }}/> : renderItem == 2? <Network userID={view as string} sx={{overflowY:'auto', maxHeight: 450}}/> : 
+            renderItem == 3? <Withdrawal userID={view as string} sx={{overflowY:'auto', maxHeight: 450}}/> : null }
             <Box sx={{ cursor: 'pointer', backgroundColor: '#ff5d61', width: 120, height: 30, borderRadius: '4px', display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => setOpen(false)}>
               <Typography sx={{ textAlign: 'center', color: '#fff' }}> Fechar </Typography>
             </Box>
           </Paper>
-        </Box>
     </Modal>
       
     </BlankLayout>

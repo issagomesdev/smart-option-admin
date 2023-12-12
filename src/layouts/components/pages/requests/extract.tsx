@@ -30,6 +30,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { useRouter } from 'next/router';
+import { useAuth } from "src/providers/AuthContext";
 
 interface Data {
   id: number,
@@ -157,17 +158,8 @@ function EnhancedTableToolbar(props: any) {
     const { balance } = props;
   return (
     <Toolbar
-      sx={{
-        pl: { sm: 10 },
-        pr: { xs: 1, sm: 1 },
-      }}
     >
-    <Typography
-        sx={{ flex: '1 1 100%' }}
-        variant="h6"
-        id="tableTitle"
-        component="div"
-      >
+    <Typography variant="h6">
         Saldo Atual R$ {balance}
     </Typography>
     </Toolbar>
@@ -188,12 +180,13 @@ export const Extract: React.FC<ExtractProps> = ({ userID, sx }) => {
   const [rows, setRows] = React.useState<Data[]>([]);
   const [balance, setBalance] = React.useState<string>(); 
   const router = useRouter();
+  const { token } = useAuth();
 
   useEffect(() => {
 
-    extract(userID).then(data => {
-      const res = data.data.extract.map(function(register:any) {
-        return {id: register.id, value: register.value, reference_id: register.reference_id, type: register.type, origin: register.origin, created_at: register.created_at };
+    extract(userID, token()).then(data => {
+      const res = data.data.extract.map(function(data:any) {
+        return {id: data.id, value: data.value, reference_id: data.reference_id, type: data.type, origin: data.origin, created_at: data.created_at };
       });
   
       setRows(res);

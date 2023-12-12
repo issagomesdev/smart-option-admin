@@ -20,7 +20,7 @@ import Switch from '@mui/material/Switch';
 import Link from '@mui/material/Link';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
-import { botUsers } from "src/services/user.service";
+import { withdrawal } from "src/services/financial.service";
 import { useEffect } from 'react';
 import themeConfig from "src/configs/themeConfig";
 import DefaultPalette from "src/@core/theme/palette";
@@ -34,15 +34,14 @@ import { useAuth } from "src/providers/AuthContext";
 
 interface Data {
   id: number,
-  name: string,
-  email: string,
-  plan: string,
-  telegram: string,
-  status: number,
+  value: string,
+  reference_id: string,
+  reply: string,
+  status: string,
+  transaction_id: string,
   created_at: string,
   actions: string
 }
-type Plans = 'bronze' | 'silver' | 'gold' | 'without';
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -95,32 +94,20 @@ const headCells: readonly HeadCell[] = [
     label: 'ID',
   },
   {
-    id: 'name',
+    id: 'value',
     numeric: false,
     disablePadding: true,
-    label: 'Nome',
+    label: 'Valor',
   },
   {
-    id: 'email',
+    id: 'reply',
     numeric: false,
     disablePadding: false,
-    label: 'Email',
-  },
-  {
-    id: 'plan',
-    numeric: false,
-    disablePadding: false,
-    label: 'Plano',
-  },
-  {
-    id: 'telegram',
-    numeric: false,
-    disablePadding: false,
-    label: 'Telegram',
+    label: 'Resposta',
   },
   {
     id: 'status',
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: 'Situação',
   },
@@ -128,7 +115,7 @@ const headCells: readonly HeadCell[] = [
     id: 'created_at',
     numeric: false,
     disablePadding: false,
-    label: 'Cadastrado em',
+    label: 'Data',
   },
   {
     id: 'actions',
@@ -146,8 +133,7 @@ interface EnhancedTableProps {
 }
 
 function EnhancedTableHead(props: EnhancedTableProps) {
-  const { order, orderBy, rowCount, onRequestSort } =
-    props;
+  const { order, orderBy, rowCount, onRequestSort } = props;
   const createSortHandler =
     (property: keyof Data) => (event: React.MouseEvent<unknown>) => {
       onRequestSort(event, property);
@@ -182,35 +168,22 @@ function EnhancedTableHead(props: EnhancedTableProps) {
   );
 }
 
-interface EnhancedTableToolbarProps {
-  numSelected: number;
-}
-
 function EnhancedTableToolbar() {
   return (
-    <Toolbar
-      sx={{
-        pl: { sm: 10 },
-        pr: { xs: 1, sm: 1 },
-      }}
-    >
-      <Typography
-          sx={{ flex: '1 1 100%' }}
-          variant="h6"
-          id="tableTitle"
-          component="div"
-        >
-          Usuários 
-      </Typography>
-      <Tooltip title="Filter list">
-          <IconButton>
-            <FilterListIcon />
-          </IconButton>
-        </Tooltip>
+    <Toolbar>
+    <Typography variant="h6">
+        Solicitações de saques
+    </Typography>
     </Toolbar>
   );
 }
-export default function Users() {
+
+interface ExtractProps {
+    userID?: string|null;
+    sx:any
+}
+
+export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
   const [order, setOrder] = React.useState<Order>('asc');
   const [orderBy, setOrderBy] = React.useState<keyof Data>('id');
   const [selected, setSelected] = React.useState<readonly number[]>([]);
@@ -224,13 +197,13 @@ export default function Users() {
 
   useEffect(() => {
 
-    botUsers(token()).then(data => {
-      const res = data.data.map(function(user:any) {
-        return {id: user.id, name: user.name, email: user.email, plan: user.plan, telegram: user.telegram, status: user.status, created_at: user.created_at};
-      });
-  
-      setRows(res)
-  
+    withdrawal(userID, token()).then(data => {
+        const res = data.data.map(function(data:any) {
+            return {id: data.id, value: data.value, reference_id: data.reference_id, reply: data.reply_observation, status: data.status, transaction_id: data.transaction_id, created_at: data.created_at };
+          });
+      
+          setRows(res);
+      
     }).catch(error => console.error(error));
 
   }, []);
@@ -317,9 +290,8 @@ export default function Users() {
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Paper sx={{ width: '100%', mb: 2 }}>
         <EnhancedTableToolbar/>
-        <TableContainer>
+        <TableContainer sx={sx}>
           <Table
             sx={{ minWidth: 750 }}
             aria-labelledby="tableTitle"
@@ -344,54 +316,9 @@ export default function Users() {
                   >
                     
                     <TableCell>{row.id}</TableCell>
-                    <TableCell>{row.name}</TableCell>
-                    <TableCell>{row.email}</TableCell>
-                    <TableCell>
-                      <Box
-                      bgcolor={DefaultPalette(themeConfig.mode, 'primary').customColors[row.plan as Plans]}
-                      borderRadius={16}
-                      textAlign="center"
-                      color="white">
-                        {row.plan == 'without'? 'nenhum' : row.plan}
-                      </Box>
-                    </TableCell>
-                    <TableCell>{row.telegram == 'off'? 
-                      <Box
-                      bgcolor={DefaultPalette(themeConfig.mode, 'primary').error.dark}
-                      borderRadius={16}
-                      textAlign="center"
-                      color="white">
-                        desligado
-                      </Box> : 
-                    <Link
-                    bgcolor={DefaultPalette(themeConfig.mode, 'primary').primary.light}
-                    borderRadius={16}
-                    textAlign="center"
-                    paddingX={3}
-                    paddingY={0.4}
-                    color="white"
-                    href={"https://web.telegram.org/k/#@"+row.telegram}
-                    underline="hover"
-                    >
-                      {row.telegram} 
-                    </Link>
-                    }</TableCell>
-                    <TableCell>{row.status? 
-                      <Box
-                      bgcolor={DefaultPalette(themeConfig.mode, 'primary').success.light}
-                      borderRadius={16}
-                      textAlign="center"
-                      color="white">
-                        Ativo
-                      </Box> : 
-                      <Box
-                      bgcolor={DefaultPalette(themeConfig.mode, 'primary').error.main}
-                      borderRadius={16}
-                      textAlign="center"
-                      color="white">
-                        Inativo
-                      </Box>
-                    }</TableCell>
+                    <TableCell>{row.value}</TableCell>
+                    <TableCell>{row.reply}</TableCell>
+                    <TableCell>{row.status == "pending"? "Pendente" : row.status == "authorized"? "Concluído" : row.status == "refused"? "Negado" : "Pendente"}</TableCell>
                     <TableCell>{row.created_at}</TableCell>
                     <TableCell>
                       <IconButton
@@ -411,7 +338,7 @@ export default function Users() {
                           },
                         }}
                         onClose={() => setActions(null)}>
-                          <MenuItem onClick={() => router.push(`/users/view/${id}`)}> Visualizar </MenuItem>
+                          <MenuItem> Responder Solicitação </MenuItem>
                         </Menu>
                     </TableCell>
                   </TableRow>
@@ -438,7 +365,6 @@ export default function Users() {
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
-      </Paper>
     </Box>
   );
 }

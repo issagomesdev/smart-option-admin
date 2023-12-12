@@ -11,7 +11,7 @@ interface AuthContextData {
   user:any;
   login: (credentials: { email: string; password: string }) => Promise<void>;
   logout: () => void;
-  token: () => string|null;
+  token: () => string;
 }
 
 const AuthContext = createContext<AuthContextData | undefined>(undefined);
@@ -22,35 +22,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const router = useRouter();
   const baseurl = process.env.NEXT_PUBLIC_BASE_URL;
 
+  const checkTokenValidity = async (token:string) => {
+    try {
+
+      const response:any = await axios.post(
+        `${baseurl}/api/auth/token`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+        if (response.data.user) {
+          setUser(response.data.user);
+          setIsAuthenticated(true);
+        } else {
+          logout();
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+      }
+  }
+
   useEffect(() => {
     const token = localStorage.getItem('token');
 
-    const checkTokenValidity = async () => {
-      try {
-
-        const response:any = await axios.post(
-          `${baseurl}/api/auth/token`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-          if (response.data.user) {
-            setUser(response.data.user);
-            setIsAuthenticated(true);
-          } else {
-            logout();
-          }
-        } catch (error) {
-          console.error('Erro:', error);
-        }
-    }
-
     if(token){
-      checkTokenValidity();
+      checkTokenValidity(token)
     } else {
       setIsAuthenticated(false);
       setUser({});
@@ -80,8 +80,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const token = () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || '';
     if(!token) logout();
+    checkTokenValidity(token)
     return token;
   }
 

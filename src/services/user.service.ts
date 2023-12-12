@@ -1,9 +1,7 @@
 const baseurl = process.env.NEXT_PUBLIC_BASE_URL;
 import axios from 'axios';
 
-export const editAccount = async(values:any) => {
-    
-    const token = localStorage.getItem('token');
+export const editAccount = async(values:any, token:string) => {
     try {
 
         const response:any = await axios.patch(
@@ -21,9 +19,7 @@ export const editAccount = async(values:any) => {
         }
 }
 
-export const updatePass = async(values:any) => {
-    
-    const token = localStorage.getItem('token');
+export const updatePass = async(values:any, token:string) => {
     try {
 
         const response:any = await axios.patch(
@@ -41,9 +37,7 @@ export const updatePass = async(values:any) => {
         }
 }
 
-export const botUsers = async() => {
-    
-  const token = localStorage.getItem('token');
+export const botUsers = async(token:string) => {
   try {
 
       const response:any = await axios.get(
@@ -61,9 +55,8 @@ export const botUsers = async() => {
       }
 }
 
-export const botUser = async(id:string) => {
+export const botUser = async(id:string, token:string) => {
   try {
-      const token = localStorage.getItem('token');
       const response:any = await axios.get(
         `${baseurl}/api/users/user-bot/${id}`,
         {

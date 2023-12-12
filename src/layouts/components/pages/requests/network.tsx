@@ -20,7 +20,7 @@ import Switch from '@mui/material/Switch';
 import Link from '@mui/material/Link';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
-import { botUsers } from "src/services/user.service";
+import { network } from "src/services/network.service";
 import { useEffect } from 'react';
 import themeConfig from "src/configs/themeConfig";
 import DefaultPalette from "src/@core/theme/palette";
@@ -31,18 +31,49 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { useRouter } from 'next/router';
 import { useAuth } from "src/providers/AuthContext";
+import Grid from '@mui/material/Grid';
+import { HumanCapacityDecrease, HumanCapacityIncrease }  from 'mdi-material-ui';
 
 interface Data {
   id: number,
   name: string,
-  email: string,
-  plan: string,
-  telegram: string,
+  level: string,
   status: number,
-  created_at: string,
   actions: string
 }
-type Plans = 'bronze' | 'silver' | 'gold' | 'without';
+
+const headCells: readonly HeadCell[] = [
+  {
+    id: 'id',
+    numeric: true,
+    disablePadding: false,
+    label: 'ID',
+  },
+  {
+    id: 'name',
+    numeric: false,
+    disablePadding: true,
+    label: 'Nome',
+  },
+  {
+    id: 'level',
+    numeric: true,
+    disablePadding: false,
+    label: 'Nivel',
+  },
+  {
+    id: 'status',
+    numeric: false,
+    disablePadding: false,
+    label: 'Situação',
+  },
+  {
+    id: 'actions',
+    numeric: false,
+    disablePadding: false,
+    label: 'Ações',
+  },
+];
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -87,56 +118,7 @@ interface HeadCell {
   numeric: boolean;
 }
 
-const headCells: readonly HeadCell[] = [
-  {
-    id: 'id',
-    numeric: true,
-    disablePadding: false,
-    label: 'ID',
-  },
-  {
-    id: 'name',
-    numeric: false,
-    disablePadding: true,
-    label: 'Nome',
-  },
-  {
-    id: 'email',
-    numeric: false,
-    disablePadding: false,
-    label: 'Email',
-  },
-  {
-    id: 'plan',
-    numeric: false,
-    disablePadding: false,
-    label: 'Plano',
-  },
-  {
-    id: 'telegram',
-    numeric: false,
-    disablePadding: false,
-    label: 'Telegram',
-  },
-  {
-    id: 'status',
-    numeric: true,
-    disablePadding: false,
-    label: 'Situação',
-  },
-  {
-    id: 'created_at',
-    numeric: false,
-    disablePadding: false,
-    label: 'Cadastrado em',
-  },
-  {
-    id: 'actions',
-    numeric: false,
-    disablePadding: false,
-    label: 'Ações',
-  },
-];
+
 
 interface EnhancedTableProps {
   onRequestSort: (event: React.MouseEvent<unknown>, property: keyof Data) => void;
@@ -146,8 +128,7 @@ interface EnhancedTableProps {
 }
 
 function EnhancedTableHead(props: EnhancedTableProps) {
-  const { order, orderBy, rowCount, onRequestSort } =
-    props;
+  const { order, orderBy, rowCount, onRequestSort } = props;
   const createSortHandler =
     (property: keyof Data) => (event: React.MouseEvent<unknown>) => {
       onRequestSort(event, property);
@@ -182,10 +163,6 @@ function EnhancedTableHead(props: EnhancedTableProps) {
   );
 }
 
-interface EnhancedTableToolbarProps {
-  numSelected: number;
-}
-
 function EnhancedTableToolbar() {
   return (
     <Toolbar
@@ -194,48 +171,50 @@ function EnhancedTableToolbar() {
         pr: { xs: 1, sm: 1 },
       }}
     >
-      <Typography
-          sx={{ flex: '1 1 100%' }}
-          variant="h6"
-          id="tableTitle"
-          component="div"
-        >
-          Usuários 
-      </Typography>
-      <Tooltip title="Filter list">
-          <IconButton>
-            <FilterListIcon />
-          </IconButton>
-        </Tooltip>
+    <Typography variant="h6">
+        Rede
+    </Typography>
     </Toolbar>
   );
 }
-export default function Users() {
+
+interface ExtractProps {
+    userID?: string;
+    sx:any
+}
+
+export const Network: React.FC<ExtractProps> = ({ userID, sx }) => {
   const [order, setOrder] = React.useState<Order>('asc');
   const [orderBy, setOrderBy] = React.useState<keyof Data>('id');
-  const [selected, setSelected] = React.useState<readonly number[]>([]);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
-  const [rows, setRows] = React.useState<Data[]>([]);
-  const [actions, setActions] = React.useState<null | HTMLElement>(null); 
+  const [rows, setRows] = React.useState<Data[]>([]); 
+  const [guests, setGuests] = React.useState<Data[]>([]); 
+  const [affiliates, setAffiliates] = React.useState<Data[]>([]);
+  const [actions, setActions] = React.useState<null | HTMLElement>(null);  
+  const [typeOfNetwork, setTypeOfNetwork] = React.useState<number>();
   const [id, setId] = React.useState<any>({}); 
   const router = useRouter();
   const { token } = useAuth();
 
   useEffect(() => {
 
-    botUsers(token()).then(data => {
-      const res = data.data.map(function(user:any) {
-        return {id: user.id, name: user.name, email: user.email, plan: user.plan, telegram: user.telegram, status: user.status, created_at: user.created_at};
+    network(userID, token()).then(data => {
+      const data_affiliates = data.data.affiliates.map(function(data:any) {
+        return {id: data.id, name: data.name, level: data.level, status: data.status };
       });
-  
-      setRows(res)
+
+      setAffiliates(data_affiliates);
+
+      const data_guests = data.data.guests.map(function(data:any) {
+        return {id: data.id, name: data.name, level: data.level, status: data.status };
+      });
+
+      setGuests(data_guests);
   
     }).catch(error => console.error(error));
 
   }, []);
-
-  
 
   let visibleRows = React.useMemo(
     () =>
@@ -255,34 +234,6 @@ export default function Users() {
     setOrderBy(property);
   };
 
-  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.checked) {
-      const newSelected = rows.map((n) => n.id);
-      setSelected(newSelected);
-      return;
-    }
-    setSelected([]);
-  };
-
-  const handleClick = (event: React.MouseEvent<unknown>, id: number) => {
-    const selectedIndex = selected.indexOf(id);
-    let newSelected: readonly number[] = [];
-
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, id);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1),
-      );
-    }
-    setSelected(newSelected);
-  };
-
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
@@ -292,34 +243,50 @@ export default function Users() {
     setPage(0);
   };
 
-  const isSelected = (id: number) => selected.indexOf(id) !== -1;
+  function TypeOfNetwork(){
+    return (
+      <Grid container spacing={2}>
+      <Grid item xs={6} sx={{cursor: 'pointer'}} onClick={() => selectTypeOfNetwork(2)}>
+          <Paper sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px', backgroundColor: DefaultPalette(themeConfig.mode, 'primary').primary.light, color: '#fff' }}>
+          <HumanCapacityIncrease sx={{ fontSize: 40 }}/>
+          <Typography sx={{ textAlign: 'center', color: '#fff', fontWeight: 'bolder' }}> Afiliação </Typography>
+          </Paper>
+      </Grid>
+      <Grid item xs={6} sx={{cursor: 'pointer'}} onClick={() => selectTypeOfNetwork(1)}>
+          <Paper sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px', backgroundColor: DefaultPalette(themeConfig.mode, 'primary').primary.light, color: '#fff' }}>
+          <HumanCapacityDecrease sx={{ fontSize: 40 }}/>
+          <Typography sx={{ textAlign: 'center', color: '#fff', fontWeight: 'bolder' }}> Afiliados </Typography>
+          </Paper>
+      </Grid>
+      </Grid>
+    )
+  }
+
+  const selectTypeOfNetwork = (id: number) =>{ 
+    setTypeOfNetwork(id);
+    id == 1? setRows(guests) : setRows(affiliates);
+  }
 
   // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
   if (rows.length <= 0) {
-    return <BlankLayout>
-      <Box className='content-center'>
-        <PuffLoader
-          size={100}
-          color={DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient}
-          cssOverride={{
-            display: "block",
-            margin: "1",
-            borderColor: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient,
-          }}
-          speedMultiplier={0.8}
-        />
-      </Box>
-    </BlankLayout>
+    return (
+    <Box sx={{ width: '100%',  marginY: '1em', flexGrow: 1 }}>
+      <TypeOfNetwork/>
+    <Box sx={{ width: '100%', marginY: '1em' }}>
+      <Typography variant="subtitle1" sx={{textAlign: 'center'}}> {typeOfNetwork == 1? 'O usuário não possue afiliados no momento' : typeOfNetwork == 2? 'O usuário não possue afiliações no momento': ''} </Typography>
+    </Box>
+    </Box>
+    )
   }
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Paper sx={{ width: '100%', mb: 2 }}>
+      <TypeOfNetwork/>
         <EnhancedTableToolbar/>
-        <TableContainer>
+        <TableContainer sx={sx}>
           <Table
             sx={{ minWidth: 750 }}
             aria-labelledby="tableTitle"
@@ -342,41 +309,9 @@ export default function Users() {
                     key={row.id}
                     sx={{ cursor: 'pointer' }}
                   >
-                    
                     <TableCell>{row.id}</TableCell>
                     <TableCell>{row.name}</TableCell>
-                    <TableCell>{row.email}</TableCell>
-                    <TableCell>
-                      <Box
-                      bgcolor={DefaultPalette(themeConfig.mode, 'primary').customColors[row.plan as Plans]}
-                      borderRadius={16}
-                      textAlign="center"
-                      color="white">
-                        {row.plan == 'without'? 'nenhum' : row.plan}
-                      </Box>
-                    </TableCell>
-                    <TableCell>{row.telegram == 'off'? 
-                      <Box
-                      bgcolor={DefaultPalette(themeConfig.mode, 'primary').error.dark}
-                      borderRadius={16}
-                      textAlign="center"
-                      color="white">
-                        desligado
-                      </Box> : 
-                    <Link
-                    bgcolor={DefaultPalette(themeConfig.mode, 'primary').primary.light}
-                    borderRadius={16}
-                    textAlign="center"
-                    paddingX={3}
-                    paddingY={0.4}
-                    color="white"
-                    href={"https://web.telegram.org/k/#@"+row.telegram}
-                    underline="hover"
-                    >
-                      {row.telegram} 
-                    </Link>
-                    }</TableCell>
-                    <TableCell>{row.status? 
+                    <TableCell>{row.level}</TableCell> <TableCell>{row.status? 
                       <Box
                       bgcolor={DefaultPalette(themeConfig.mode, 'primary').success.light}
                       borderRadius={16}
@@ -392,7 +327,6 @@ export default function Users() {
                         Inativo
                       </Box>
                     }</TableCell>
-                    <TableCell>{row.created_at}</TableCell>
                     <TableCell>
                       <IconButton
                       edge="end"
@@ -438,7 +372,6 @@ export default function Users() {
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
-      </Paper>
     </Box>
   );
 }
