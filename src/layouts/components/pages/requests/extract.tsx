@@ -20,7 +20,7 @@ import Switch from '@mui/material/Switch';
 import Link from '@mui/material/Link';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
-import { extract } from "src/services/financial.service";
+import { extract } from "src/services/requests.service";
 import { useEffect } from 'react';
 import themeConfig from "src/configs/themeConfig";
 import DefaultPalette from "src/@core/theme/palette";
@@ -178,7 +178,8 @@ export const Extract: React.FC<ExtractProps> = ({ userID, sx }) => {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [rows, setRows] = React.useState<Data[]>([]);
-  const [balance, setBalance] = React.useState<string>(); 
+  const [balance, setBalance] = React.useState<string>();
+  const [isEmpty, setIsEmpty] = React.useState<boolean>(false);
   const router = useRouter();
   const { token } = useAuth();
 
@@ -188,9 +189,12 @@ export const Extract: React.FC<ExtractProps> = ({ userID, sx }) => {
       const res = data.data.extract.map(function(data:any) {
         return {id: data.id, value: data.value, reference_id: data.reference_id, type: data.type, origin: data.origin, created_at: data.created_at };
       });
-  
-      setRows(res);
-      setBalance(`${data.data.balance}`);
+
+      if(res.length <= 0) setIsEmpty(true);
+      else setRows(res), setBalance(`${data.data.balance}`);
+
+      
+      
   
     }).catch(error => console.error(error));
 
@@ -259,7 +263,7 @@ export const Extract: React.FC<ExtractProps> = ({ userID, sx }) => {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
-  if (rows.length <= 0) {
+  if (rows.length <= 0 && !isEmpty) {
     return <BlankLayout>
       <Box className='content-center'>
         <PuffLoader
@@ -274,6 +278,14 @@ export const Extract: React.FC<ExtractProps> = ({ userID, sx }) => {
         />
       </Box>
     </BlankLayout>
+  }
+
+  if (isEmpty) {
+    return <Box sx={{ width: '100%',  marginY: '1em', flexGrow: 1 }}>
+    <Box sx={{ width: '100%', marginY: '1em' }}>
+      <Typography variant="subtitle1" sx={{textAlign: 'center'}}> Não há registros de movimentações no extrato no momento </Typography>
+    </Box>
+    </Box>
   }
 
   return (

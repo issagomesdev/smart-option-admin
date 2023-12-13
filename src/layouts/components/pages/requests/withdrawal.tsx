@@ -20,7 +20,7 @@ import Switch from '@mui/material/Switch';
 import Link from '@mui/material/Link';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
-import { withdrawal } from "src/services/financial.service";
+import { withdrawal, respondWithdrawalRequest } from "src/services/requests.service";
 import { useEffect } from 'react';
 import themeConfig from "src/configs/themeConfig";
 import DefaultPalette from "src/@core/theme/palette";
@@ -29,11 +29,17 @@ import BlankLayout from "src/@core/layouts/BlankLayout";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { useRouter } from 'next/router';
 import { useAuth } from "src/providers/AuthContext";
+import Modal from '@mui/material/Modal';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import TextField from '@mui/material/TextField'
+import { ToastContainer, toast } from 'react-toastify';
+
 
 interface Data {
   id: number,
+  user_id: string,
+  user: string,
   value: string,
   reference_id: string,
   reply: string,
@@ -94,16 +100,16 @@ const headCells: readonly HeadCell[] = [
     label: 'ID',
   },
   {
+    id: 'user',
+    numeric: true,
+    disablePadding: false,
+    label: 'Usuário',
+  },
+  {
     id: 'value',
     numeric: false,
     disablePadding: true,
     label: 'Valor',
-  },
-  {
-    id: 'reply',
-    numeric: false,
-    disablePadding: false,
-    label: 'Resposta',
   },
   {
     id: 'status',
@@ -190,25 +196,27 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [rows, setRows] = React.useState<Data[]>([]);
-  const [actions, setActions] = React.useState<null | HTMLElement>(null); 
-  const [id, setId] = React.useState<any>({}); 
-  const router = useRouter();
+  const [actions, setActions] = React.useState<null | HTMLElement>(null);
+  const [isEmpty, setIsEmpty] = React.useState<boolean>(false); 
+  const [item, setItem] = React.useState<any>({});
+  const [open, setOpen] = React.useState(false);
+  const [observation, setObservation] = React.useState<string>('');
   const { token } = useAuth();
+  const isSmallerThan = useMediaQuery('(max-width:830px)');
 
-  useEffect(() => {
-
-    withdrawal(userID, token()).then(data => {
-        const res = data.data.map(function(data:any) {
-            return {id: data.id, value: data.value, reference_id: data.reference_id, reply: data.reply_observation, status: data.status, transaction_id: data.transaction_id, created_at: data.created_at };
-          });
-      
-          setRows(res);
-      
-    }).catch(error => console.error(error));
-
+  useEffect(() => {   
+    withdrawalRequests();
   }, []);
 
-  
+  const withdrawalRequests = () => {
+    withdrawal(userID, token()).then(data => {
+      const res = data.data.map(function(data:any) {
+          return {id: data.id, user_id: data.user_id, user: data.name, value: data.value, reference_id: data.reference_id, reply: data.reply_observation, status: data.status, transaction_id: data.transaction_id, created_at: data.created_at };
+        });
+        if(res.length <= 0) setIsEmpty(true);
+        else setRows(res);
+      }).catch(error => console.error(error));
+  }
 
   let visibleRows = React.useMemo(
     () =>
@@ -219,6 +227,23 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
     [order, rows, orderBy, page, rowsPerPage],
   );
 
+  const respondRequest = (res:any) => {
+  respondWithdrawalRequest(res, token()).then(data => {
+    setOpen(false);
+    setObservation('');
+    withdrawalRequests();
+    toast.success('Solicitação respondida com sucesso!', {
+      position: toast.POSITION.TOP_RIGHT,
+      theme: "colored"
+    });
+  }).catch((error:any) => {
+    toast.error(error || 'Erro desconhecido, tente novamente!', {
+      position: toast.POSITION.TOP_RIGHT,
+      theme: "colored"
+    });
+  });
+  }
+
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
     property: keyof Data,
@@ -226,34 +251,6 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
     setOrderBy(property);
-  };
-
-  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.checked) {
-      const newSelected = rows.map((n) => n.id);
-      setSelected(newSelected);
-      return;
-    }
-    setSelected([]);
-  };
-
-  const handleClick = (event: React.MouseEvent<unknown>, id: number) => {
-    const selectedIndex = selected.indexOf(id);
-    let newSelected: readonly number[] = [];
-
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, id);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1),
-      );
-    }
-    setSelected(newSelected);
   };
 
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -271,7 +268,7 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
-  if (rows.length <= 0) {
+  if (rows.length <= 0 && !isEmpty) {
     return <BlankLayout>
       <Box className='content-center'>
         <PuffLoader
@@ -286,6 +283,14 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
         />
       </Box>
     </BlankLayout>
+  }
+
+  if (isEmpty) {
+    return <Box sx={{ width: '100%',  marginY: '1em', flexGrow: 1 }}>
+    <Box sx={{ width: '100%', marginY: '1em' }}>
+      <Typography variant="subtitle1" sx={{textAlign: 'center'}}> Não há registros de solicitações de saque no momento </Typography>
+    </Box>
+    </Box>
   }
 
   return (
@@ -316,9 +321,17 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
                   >
                     
                     <TableCell>{row.id}</TableCell>
+                    <TableCell>
+                      <Link
+                          textAlign="center"
+                          href={"/users/view/"+row.user_id}
+                          underline="hover"
+                          >
+                          {row.user} 
+                      </Link>
+                    </TableCell>
                     <TableCell>{row.value}</TableCell>
-                    <TableCell>{row.reply}</TableCell>
-                    <TableCell>{row.status == "pending"? "Pendente" : row.status == "authorized"? "Concluído" : row.status == "refused"? "Negado" : "Pendente"}</TableCell>
+                    <TableCell>{row.status == "pending"? "Pendente" : row.status == "authorized"? "Autorizado" : row.status == "refused"? "Rejeitado" : "Pendente"}</TableCell>
                     <TableCell>{row.created_at}</TableCell>
                     <TableCell>
                       <IconButton
@@ -326,7 +339,7 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
                       color="inherit"
                       aria-label="menu"
                       aria-haspopup="true"
-                      onClick={(event) =>{setActions(event.currentTarget as HTMLElement); setId(row.id) }}>
+                      onClick={(event) =>{setActions(event.currentTarget as HTMLElement); setItem(row) }}>
                         <MoreVertIcon/>
                       </IconButton>
                         <Menu
@@ -338,7 +351,7 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
                           },
                         }}
                         onClose={() => setActions(null)}>
-                          <MenuItem> Responder Solicitação </MenuItem>
+                          <MenuItem onClick={() => {setOpen(true); setActions(null)}}> {item.status == "pending"? 'Responder' : 'Visualizar'} </MenuItem>
                         </Menu>
                     </TableCell>
                   </TableRow>
@@ -365,6 +378,37 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
+
+        <Modal open={open} sx={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center'}}>
+          <Paper sx={{ position: 'relative', width: isSmallerThan ? '100%' : '40%', height: '60%', padding: '30px', margin: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY:'auto'}}>
+
+            { item.status == "pending"? <Box sx={{ width: '100%', height: '90%', marginBottom: 3, overflow: 'auto', display: 'flex', alignItems: 'center' }}>
+            <TextField style={{ width: '100%'}} label="Observações" multiline rows={6}
+            onChange={(event) => { setObservation(event.target.value)} }
+            value={observation}/>
+            </Box> : <Box sx={{ width: '100%', height: '90%', marginBottom: 3 }}>
+            <Typography> Situação: {item.status == "pending"? "Pendente" : item.status == "authorized"? "Autorizado" : item.status == "refused"? "Rejeitado" : "Pendente"} </Typography>
+            <Typography sx={{ overflow: 'auto', height: '90%' }}> Observação: {item.reply? item.reply : "Nenhuma observação foi incluída na resposta à solicitação."} </Typography>
+            </Box>}       
+            
+           { item.status == "pending"? <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 2 }}>
+              <Box sx={{ cursor: 'pointer', backgroundColor: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient, width: 120, height: 30, borderRadius: '4px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginRight: 5 }} onClick={() => respondRequest({id: item.id, res: true, observation: observation})}>
+                <Typography sx={{ textAlign: 'center', color: '#fff' }}> Autorizar </Typography>
+              </Box>
+
+              <Box sx={{ cursor: 'pointer', backgroundColor: '#ff5d61', width: 120, height: 30, borderRadius: '4px', display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => respondRequest({id: item.id, res: false, observation: observation})}>
+              <Typography sx={{ textAlign: 'center', color: '#fff' }}> Rejeitar </Typography>
+              </Box>
+            </Box> : null }
+
+            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+              <Box sx={{ cursor: 'pointer', backgroundColor: '#ff5d61', width: 120, height: 30, borderRadius: '4px', display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => setOpen(false)}>
+                <Typography sx={{ textAlign: 'center', color: '#fff' }}> Fechar </Typography>
+              </Box>
+            </Box> 
+          </Paper>
+        </Modal>
+        <ToastContainer />
     </Box>
   );
 }

@@ -44,7 +44,6 @@ import { useAuth } from "src/providers/AuthContext"
 
 
 import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 interface Form {
   email: string,

@@ -20,7 +20,7 @@ import Switch from '@mui/material/Switch';
 import Link from '@mui/material/Link';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
-import { network } from "src/services/network.service";
+import { deposit } from "src/services/requests.service";
 import { useEffect } from 'react';
 import themeConfig from "src/configs/themeConfig";
 import DefaultPalette from "src/@core/theme/palette";
@@ -31,49 +31,17 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { useRouter } from 'next/router';
 import { useAuth } from "src/providers/AuthContext";
-import Grid from '@mui/material/Grid';
-import { HumanCapacityDecrease, HumanCapacityIncrease }  from 'mdi-material-ui';
 
 interface Data {
   id: number,
-  name: string,
-  level: string,
-  status: number,
-  actions: string
+  user_id: string,
+  user: string,
+  value: string,
+  reference_id: string,
+  status: string,
+  transaction_id: string,
+  created_at: string,
 }
-
-const headCells: readonly HeadCell[] = [
-  {
-    id: 'id',
-    numeric: true,
-    disablePadding: false,
-    label: 'ID',
-  },
-  {
-    id: 'name',
-    numeric: false,
-    disablePadding: true,
-    label: 'Nome',
-  },
-  {
-    id: 'level',
-    numeric: true,
-    disablePadding: false,
-    label: 'Nivel',
-  },
-  {
-    id: 'status',
-    numeric: false,
-    disablePadding: false,
-    label: 'Situação',
-  },
-  {
-    id: 'actions',
-    numeric: false,
-    disablePadding: false,
-    label: 'Ações',
-  },
-];
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -118,7 +86,38 @@ interface HeadCell {
   numeric: boolean;
 }
 
-
+const headCells: readonly HeadCell[] = [
+  {
+    id: 'id',
+    numeric: true,
+    disablePadding: false,
+    label: 'ID',
+  },
+  {
+    id: 'user',
+    numeric: true,
+    disablePadding: false,
+    label: 'Usuário',
+  },
+  {
+    id: 'value',
+    numeric: false,
+    disablePadding: true,
+    label: 'Valor',
+  },
+  {
+    id: 'status',
+    numeric: false,
+    disablePadding: false,
+    label: 'Situação',
+  },
+  {
+    id: 'created_at',
+    numeric: false,
+    disablePadding: false,
+    label: 'Data',
+  }
+];
 
 interface EnhancedTableProps {
   onRequestSort: (event: React.MouseEvent<unknown>, property: keyof Data) => void;
@@ -165,56 +164,45 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 
 function EnhancedTableToolbar() {
   return (
-    <Toolbar
-      sx={{
-        pl: { sm: 10 },
-        pr: { xs: 1, sm: 1 },
-      }}
-    >
+    <Toolbar>
     <Typography variant="h6">
-        Rede
+        Solicitações de depósitos
     </Typography>
     </Toolbar>
   );
 }
 
 interface ExtractProps {
-    userID?: string;
+    userID?: string|null;
     sx:any
 }
 
-export const Network: React.FC<ExtractProps> = ({ userID, sx }) => {
+export const Deposit: React.FC<ExtractProps> = ({ userID = null, sx }) => {
   const [order, setOrder] = React.useState<Order>('asc');
   const [orderBy, setOrderBy] = React.useState<keyof Data>('id');
+  const [selected, setSelected] = React.useState<readonly number[]>([]);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
-  const [rows, setRows] = React.useState<Data[]>([]); 
-  const [guests, setGuests] = React.useState<Data[]>([]); 
-  const [affiliates, setAffiliates] = React.useState<Data[]>([]);
-  const [actions, setActions] = React.useState<null | HTMLElement>(null);  
-  const [typeOfNetwork, setTypeOfNetwork] = React.useState<number>();
+  const [rows, setRows] = React.useState<Data[]>([]);
+  const [actions, setActions] = React.useState<null | HTMLElement>(null);
+  const [isEmpty, setIsEmpty] = React.useState<boolean>(false); 
   const [id, setId] = React.useState<any>({}); 
   const router = useRouter();
   const { token } = useAuth();
 
   useEffect(() => {
 
-    network(userID, token()).then(data => {
-      const data_affiliates = data.data.affiliates.map(function(data:any) {
-        return {id: data.id, name: data.name, level: data.level, status: data.status };
+    deposit(userID, token()).then(data => {
+       const res = data.data.map(function(data:any) {
+        return {id: data.id, user_id: data.user_id, user: data.name, value: data.value, reference_id: data.reference_id, status: data.status, transaction_id: data.transaction_id, created_at: data.created_at };
       });
-
-      setAffiliates(data_affiliates);
-
-      const data_guests = data.data.guests.map(function(data:any) {
-        return {id: data.id, name: data.name, level: data.level, status: data.status };
-      });
-
-      setGuests(data_guests);
-  
+      if(res.length <= 0) setIsEmpty(true);
+      else setRows(res);
     }).catch(error => console.error(error));
 
   }, []);
+
+  
 
   let visibleRows = React.useMemo(
     () =>
@@ -234,6 +222,34 @@ export const Network: React.FC<ExtractProps> = ({ userID, sx }) => {
     setOrderBy(property);
   };
 
+  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.checked) {
+      const newSelected = rows.map((n) => n.id);
+      setSelected(newSelected);
+      return;
+    }
+    setSelected([]);
+  };
+
+  const handleClick = (event: React.MouseEvent<unknown>, id: number) => {
+    const selectedIndex = selected.indexOf(id);
+    let newSelected: readonly number[] = [];
+
+    if (selectedIndex === -1) {
+      newSelected = newSelected.concat(selected, id);
+    } else if (selectedIndex === 0) {
+      newSelected = newSelected.concat(selected.slice(1));
+    } else if (selectedIndex === selected.length - 1) {
+      newSelected = newSelected.concat(selected.slice(0, -1));
+    } else if (selectedIndex > 0) {
+      newSelected = newSelected.concat(
+        selected.slice(0, selectedIndex),
+        selected.slice(selectedIndex + 1),
+      );
+    }
+    setSelected(newSelected);
+  };
+
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
@@ -243,48 +259,39 @@ export const Network: React.FC<ExtractProps> = ({ userID, sx }) => {
     setPage(0);
   };
 
-  function TypeOfNetwork(){
-    return (
-      <Grid container spacing={2}>
-      <Grid item xs={6} sx={{cursor: 'pointer'}} onClick={() => selectTypeOfNetwork(2)}>
-          <Paper sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px', backgroundColor: DefaultPalette(themeConfig.mode, 'primary').primary.light, color: '#fff' }}>
-          <HumanCapacityIncrease sx={{ fontSize: 40 }}/>
-          <Typography sx={{ textAlign: 'center', color: '#fff', fontWeight: 'bolder' }}> Afiliação </Typography>
-          </Paper>
-      </Grid>
-      <Grid item xs={6} sx={{cursor: 'pointer'}} onClick={() => selectTypeOfNetwork(1)}>
-          <Paper sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px', backgroundColor: DefaultPalette(themeConfig.mode, 'primary').primary.light, color: '#fff' }}>
-          <HumanCapacityDecrease sx={{ fontSize: 40 }}/>
-          <Typography sx={{ textAlign: 'center', color: '#fff', fontWeight: 'bolder' }}> Afiliados </Typography>
-          </Paper>
-      </Grid>
-      </Grid>
-    )
-  }
-
-  const selectTypeOfNetwork = (id: number) =>{ 
-    setTypeOfNetwork(id);
-    id == 1? setRows(guests) : setRows(affiliates);
-  }
+  const isSelected = (id: number) => selected.indexOf(id) !== -1;
 
   // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
-  if (rows.length <= 0) {
-    return (
-    <Box sx={{ width: '100%',  marginY: '1em', flexGrow: 1 }}>
-      <TypeOfNetwork/>
+  if (rows.length <= 0 && !isEmpty) {
+    return <BlankLayout>
+      <Box className='content-center'>
+        <PuffLoader
+          size={100}
+          color={DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient}
+          cssOverride={{
+            display: "block",
+            margin: "1",
+            borderColor: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient,
+          }}
+          speedMultiplier={0.8}
+        />
+      </Box>
+    </BlankLayout>
+  }
+
+  if (isEmpty) {
+    return <Box sx={{ width: '100%',  marginY: '1em', flexGrow: 1 }}>
     <Box sx={{ width: '100%', marginY: '1em' }}>
-      <Typography variant="subtitle1" sx={{textAlign: 'center'}}> {typeOfNetwork == 1? 'Usuário sem afiliados no momento' : typeOfNetwork == 2? '  Usuário sem afiliações no momento': ''} </Typography>
+      <Typography variant="subtitle1" sx={{textAlign: 'center'}}> Não há registros de solicitações de depósito no momento </Typography>
     </Box>
     </Box>
-    )
   }
 
   return (
     <Box sx={{ width: '100%' }}>
-      <TypeOfNetwork/>
         <EnhancedTableToolbar/>
         <TableContainer sx={sx}>
           <Table
@@ -309,45 +316,20 @@ export const Network: React.FC<ExtractProps> = ({ userID, sx }) => {
                     key={row.id}
                     sx={{ cursor: 'pointer' }}
                   >
+                    
                     <TableCell>{row.id}</TableCell>
-                    <TableCell>{row.name}</TableCell>
-                    <TableCell>{row.level}</TableCell> <TableCell>{row.status? 
-                      <Box
-                      bgcolor={DefaultPalette(themeConfig.mode, 'primary').success.light}
-                      borderRadius={16}
-                      textAlign="center"
-                      color="white">
-                        Ativo
-                      </Box> : 
-                      <Box
-                      bgcolor={DefaultPalette(themeConfig.mode, 'primary').error.main}
-                      borderRadius={16}
-                      textAlign="center"
-                      color="white">
-                        Inativo
-                      </Box>
-                    }</TableCell>
                     <TableCell>
-                      <IconButton
-                      edge="end"
-                      color="inherit"
-                      aria-label="menu"
-                      aria-haspopup="true"
-                      onClick={(event) =>{setActions(event.currentTarget as HTMLElement); setId(row.id) }}>
-                        <MoreVertIcon/>
-                      </IconButton>
-                        <Menu
-                        anchorEl={actions}
-                        open={Boolean(actions)}
-                        PaperProps={{
-                          style: {
-                            boxShadow: 'rgb(0 0 0 / 5%) 0px 0px 6px',
-                          },
-                        }}
-                        onClose={() => setActions(null)}>
-                          <MenuItem onClick={() => router.push(`/users/view/${id}`)}> Visualizar </MenuItem>
-                        </Menu>
+                      <Link
+                          textAlign="center"
+                          href={"/users/view/"+row.user_id}
+                          underline="hover"
+                          >
+                          {row.user} 
+                      </Link>
                     </TableCell>
+                    <TableCell>{row.value}</TableCell>
+                    <TableCell>{row.status == "PENDING"? "Pendente" : row.status == "AUTHORIZED"? "Pre-Autorizado" : row.status == "PAID"? "Concluído" : row.status == "IN_ANALYSIS"? "Em análise" : row.status == "DECLINED"? "Recusado" : row.status == "CANCELED"? "Cancelado" : "Pendente"}</TableCell>
+                    <TableCell>{row.created_at}</TableCell>
                   </TableRow>
                 );
               })}

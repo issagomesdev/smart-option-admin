@@ -11,11 +11,11 @@ const navigation = (): VerticalNavItemsType => {
       icon: HomeCircleOutline,
       path: '/'
     },
-    {
-      title: 'Admin',
-      icon: ShieldAccount,
-      path: '/admin'
-    },
+    // {
+    //   title: 'Admin',
+    //   icon: ShieldAccount,
+    //   path: '/admin'
+    // },
     {
       title: 'Usuários',
       icon: AccountGroup,

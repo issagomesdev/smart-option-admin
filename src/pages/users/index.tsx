@@ -218,6 +218,7 @@ export default function Users() {
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [rows, setRows] = React.useState<Data[]>([]);
   const [actions, setActions] = React.useState<null | HTMLElement>(null); 
+  const [isEmpty, setIsEmpty] = React.useState<boolean>(false);
   const [id, setId] = React.useState<any>({}); 
   const router = useRouter();
   const { token } = useAuth();
@@ -228,8 +229,8 @@ export default function Users() {
       const res = data.data.map(function(user:any) {
         return {id: user.id, name: user.name, email: user.email, plan: user.plan, telegram: user.telegram, status: user.status, created_at: user.created_at};
       });
-  
-      setRows(res)
+      if(res.length <= 0) setIsEmpty(true);
+      else setRows(res);
   
     }).catch(error => console.error(error));
 
@@ -298,7 +299,7 @@ export default function Users() {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
-  if (rows.length <= 0) {
+  if (rows.length <= 0 && !isEmpty) {
     return <BlankLayout>
       <Box className='content-center'>
         <PuffLoader
@@ -314,6 +315,15 @@ export default function Users() {
       </Box>
     </BlankLayout>
   }
+
+  if (isEmpty) {
+    return <Box sx={{ width: '100%',  marginY: '1em', flexGrow: 1 }}>
+    <Box sx={{ width: '100%', marginY: '1em' }}>
+      <Typography variant="subtitle1" sx={{textAlign: 'center'}}> Não há registros de usuários no momento </Typography>
+    </Box>
+    </Box>
+  }
+
 
   return (
     <Box sx={{ width: '100%' }}>

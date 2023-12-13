@@ -20,7 +20,7 @@ import Switch from '@mui/material/Switch';
 import Link from '@mui/material/Link';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
-import { network } from "src/services/network.service";
+import { support } from "src/services/requests.service";
 import { useEffect } from 'react';
 import themeConfig from "src/configs/themeConfig";
 import DefaultPalette from "src/@core/theme/palette";
@@ -31,49 +31,20 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { useRouter } from 'next/router';
 import { useAuth } from "src/providers/AuthContext";
-import Grid from '@mui/material/Grid';
-import { HumanCapacityDecrease, HumanCapacityIncrease }  from 'mdi-material-ui';
+import Modal from '@mui/material/Modal';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 interface Data {
   id: number,
-  name: string,
-  level: string,
-  status: number,
+  user_id: string,
+  user: string,
+  product: string,
+  subject: string,
+  type: string,
+  telegram: string,
+  created_at: string,
   actions: string
 }
-
-const headCells: readonly HeadCell[] = [
-  {
-    id: 'id',
-    numeric: true,
-    disablePadding: false,
-    label: 'ID',
-  },
-  {
-    id: 'name',
-    numeric: false,
-    disablePadding: true,
-    label: 'Nome',
-  },
-  {
-    id: 'level',
-    numeric: true,
-    disablePadding: false,
-    label: 'Nivel',
-  },
-  {
-    id: 'status',
-    numeric: false,
-    disablePadding: false,
-    label: 'Situação',
-  },
-  {
-    id: 'actions',
-    numeric: false,
-    disablePadding: false,
-    label: 'Ações',
-  },
-];
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -118,7 +89,38 @@ interface HeadCell {
   numeric: boolean;
 }
 
-
+const headCells: readonly HeadCell[] = [
+  {
+    id: 'id',
+    numeric: true,
+    disablePadding: false,
+    label: 'ID',
+  },
+  {
+    id: 'user',
+    numeric: true,
+    disablePadding: false,
+    label: 'Usuário',
+  },
+  {
+    id: 'type',
+    numeric: false,
+    disablePadding: true,
+    label: 'Assunto',
+  },
+  {
+    id: 'created_at',
+    numeric: false,
+    disablePadding: false,
+    label: 'Data',
+  },
+  {
+    id: 'actions',
+    numeric: false,
+    disablePadding: false,
+    label: 'Ações',
+  },
+];
 
 interface EnhancedTableProps {
   onRequestSort: (event: React.MouseEvent<unknown>, property: keyof Data) => void;
@@ -165,56 +167,47 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 
 function EnhancedTableToolbar() {
   return (
-    <Toolbar
-      sx={{
-        pl: { sm: 10 },
-        pr: { xs: 1, sm: 1 },
-      }}
-    >
+    <Toolbar>
     <Typography variant="h6">
-        Rede
+        Solicitações de suporte
     </Typography>
     </Toolbar>
   );
 }
 
 interface ExtractProps {
-    userID?: string;
+    userID?: string|null;
     sx:any
 }
 
-export const Network: React.FC<ExtractProps> = ({ userID, sx }) => {
+export const Support: React.FC<ExtractProps> = ({ userID = null, sx }) => {
   const [order, setOrder] = React.useState<Order>('asc');
   const [orderBy, setOrderBy] = React.useState<keyof Data>('id');
+  const [selected, setSelected] = React.useState<readonly number[]>([]);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
-  const [rows, setRows] = React.useState<Data[]>([]); 
-  const [guests, setGuests] = React.useState<Data[]>([]); 
-  const [affiliates, setAffiliates] = React.useState<Data[]>([]);
-  const [actions, setActions] = React.useState<null | HTMLElement>(null);  
-  const [typeOfNetwork, setTypeOfNetwork] = React.useState<number>();
-  const [id, setId] = React.useState<any>({}); 
-  const router = useRouter();
+  const [rows, setRows] = React.useState<Data[]>([]);
+  const [actions, setActions] = React.useState<null | HTMLElement>(null);
+  const [isEmpty, setIsEmpty] = React.useState<boolean>(false); 
+  const [openItem, setOpenItem] = React.useState<any>({}); 
+  const [open, setOpen] = React.useState(false);
   const { token } = useAuth();
+  const isSmallerThan = useMediaQuery('(max-width:830px)');
 
   useEffect(() => {
 
-    network(userID, token()).then(data => {
-      const data_affiliates = data.data.affiliates.map(function(data:any) {
-        return {id: data.id, name: data.name, level: data.level, status: data.status };
-      });
-
-      setAffiliates(data_affiliates);
-
-      const data_guests = data.data.guests.map(function(data:any) {
-        return {id: data.id, name: data.name, level: data.level, status: data.status };
-      });
-
-      setGuests(data_guests);
-  
+    support(userID, token()).then(data => {
+        const res = data.data.map(function(data:any) {
+            return {id: data.id, user_id: data.user_id, user: data.name, product: data.product, subject: data.subject, type: data.type, telegram: data.telegram_user_id, created_at: data.created_at };
+          });
+          if(res.length <= 0) setIsEmpty(true);
+          else setRows(res);
+      
     }).catch(error => console.error(error));
 
   }, []);
+
+  
 
   let visibleRows = React.useMemo(
     () =>
@@ -234,6 +227,34 @@ export const Network: React.FC<ExtractProps> = ({ userID, sx }) => {
     setOrderBy(property);
   };
 
+  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.checked) {
+      const newSelected = rows.map((n) => n.id);
+      setSelected(newSelected);
+      return;
+    }
+    setSelected([]);
+  };
+
+  const handleClick = (event: React.MouseEvent<unknown>, id: number) => {
+    const selectedIndex = selected.indexOf(id);
+    let newSelected: readonly number[] = [];
+
+    if (selectedIndex === -1) {
+      newSelected = newSelected.concat(selected, id);
+    } else if (selectedIndex === 0) {
+      newSelected = newSelected.concat(selected.slice(1));
+    } else if (selectedIndex === selected.length - 1) {
+      newSelected = newSelected.concat(selected.slice(0, -1));
+    } else if (selectedIndex > 0) {
+      newSelected = newSelected.concat(
+        selected.slice(0, selectedIndex),
+        selected.slice(selectedIndex + 1),
+      );
+    }
+    setSelected(newSelected);
+  };
+
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
@@ -243,48 +264,39 @@ export const Network: React.FC<ExtractProps> = ({ userID, sx }) => {
     setPage(0);
   };
 
-  function TypeOfNetwork(){
-    return (
-      <Grid container spacing={2}>
-      <Grid item xs={6} sx={{cursor: 'pointer'}} onClick={() => selectTypeOfNetwork(2)}>
-          <Paper sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px', backgroundColor: DefaultPalette(themeConfig.mode, 'primary').primary.light, color: '#fff' }}>
-          <HumanCapacityIncrease sx={{ fontSize: 40 }}/>
-          <Typography sx={{ textAlign: 'center', color: '#fff', fontWeight: 'bolder' }}> Afiliação </Typography>
-          </Paper>
-      </Grid>
-      <Grid item xs={6} sx={{cursor: 'pointer'}} onClick={() => selectTypeOfNetwork(1)}>
-          <Paper sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px', backgroundColor: DefaultPalette(themeConfig.mode, 'primary').primary.light, color: '#fff' }}>
-          <HumanCapacityDecrease sx={{ fontSize: 40 }}/>
-          <Typography sx={{ textAlign: 'center', color: '#fff', fontWeight: 'bolder' }}> Afiliados </Typography>
-          </Paper>
-      </Grid>
-      </Grid>
-    )
-  }
-
-  const selectTypeOfNetwork = (id: number) =>{ 
-    setTypeOfNetwork(id);
-    id == 1? setRows(guests) : setRows(affiliates);
-  }
+  const isSelected = (id: number) => selected.indexOf(id) !== -1;
 
   // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
-  if (rows.length <= 0) {
-    return (
-    <Box sx={{ width: '100%',  marginY: '1em', flexGrow: 1 }}>
-      <TypeOfNetwork/>
+  if (rows.length <= 0 && !isEmpty) {
+    return <BlankLayout>
+      <Box className='content-center'>
+        <PuffLoader
+          size={100}
+          color={DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient}
+          cssOverride={{
+            display: "block",
+            margin: "1",
+            borderColor: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient,
+          }}
+          speedMultiplier={0.8}
+        />
+      </Box>
+    </BlankLayout>
+  }
+
+  if (isEmpty) {
+    return <Box sx={{ width: '100%',  marginY: '1em', flexGrow: 1 }}>
     <Box sx={{ width: '100%', marginY: '1em' }}>
-      <Typography variant="subtitle1" sx={{textAlign: 'center'}}> {typeOfNetwork == 1? 'Usuário sem afiliados no momento' : typeOfNetwork == 2? '  Usuário sem afiliações no momento': ''} </Typography>
+      <Typography variant="subtitle1" sx={{textAlign: 'center'}}> Não há registros de solicitações de suporte no momento </Typography>
     </Box>
     </Box>
-    )
   }
 
   return (
-    <Box sx={{ width: '100%' }}>
-      <TypeOfNetwork/>
+    <Box sx={{ width: '100%', position: 'relative' }}>
         <EnhancedTableToolbar/>
         <TableContainer sx={sx}>
           <Table
@@ -309,31 +321,26 @@ export const Network: React.FC<ExtractProps> = ({ userID, sx }) => {
                     key={row.id}
                     sx={{ cursor: 'pointer' }}
                   >
+                    
                     <TableCell>{row.id}</TableCell>
-                    <TableCell>{row.name}</TableCell>
-                    <TableCell>{row.level}</TableCell> <TableCell>{row.status? 
-                      <Box
-                      bgcolor={DefaultPalette(themeConfig.mode, 'primary').success.light}
-                      borderRadius={16}
-                      textAlign="center"
-                      color="white">
-                        Ativo
-                      </Box> : 
-                      <Box
-                      bgcolor={DefaultPalette(themeConfig.mode, 'primary').error.main}
-                      borderRadius={16}
-                      textAlign="center"
-                      color="white">
-                        Inativo
-                      </Box>
-                    }</TableCell>
+                    <TableCell>
+                      <Link
+                          textAlign="center"
+                          href={"/users/view/"+row.user_id}
+                          underline="hover"
+                          >
+                          {row.user} 
+                      </Link>
+                    </TableCell>
+                    <TableCell>{row.type == "support"? "Suporte Técnico" : "Adesão de Serviço"}</TableCell>
+                    <TableCell>{row.created_at}</TableCell>
                     <TableCell>
                       <IconButton
                       edge="end"
                       color="inherit"
                       aria-label="menu"
                       aria-haspopup="true"
-                      onClick={(event) =>{setActions(event.currentTarget as HTMLElement); setId(row.id) }}>
+                      onClick={(event) =>{setActions(event.currentTarget as HTMLElement); setOpenItem(row) }}>
                         <MoreVertIcon/>
                       </IconButton>
                         <Menu
@@ -345,7 +352,7 @@ export const Network: React.FC<ExtractProps> = ({ userID, sx }) => {
                           },
                         }}
                         onClose={() => setActions(null)}>
-                          <MenuItem onClick={() => router.push(`/users/view/${id}`)}> Visualizar </MenuItem>
+                          <MenuItem onClick={() => {setOpen(true)}}> Visualizar </MenuItem>
                         </Menu>
                     </TableCell>
                   </TableRow>
@@ -372,6 +379,25 @@ export const Network: React.FC<ExtractProps> = ({ userID, sx }) => {
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
+
+      <Modal open={open} sx={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center'}}>
+          <Paper sx={{ position: 'relative', width: isSmallerThan ? '100%' : '40%', height: '60%', padding: '30px', margin: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY:'auto'}}>
+
+            <Box sx={{ width: '100%', height: '100%', marginBottom: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'auto' }}>
+            <Typography sx={{ textAlign: 'center' }}> {openItem.type == "support"? openItem.subject : `${openItem.user} deseja aderir ao serviço personalizado ${openItem.product}` } </Typography>
+            </Box>       
+            
+            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+              <Box sx={{ cursor: 'pointer', backgroundColor: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient, width: 120, height: 30, borderRadius: '4px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginRight: 5 }} onClick={() => window.open("https://web.telegram.org/k/#"+openItem.telegram)}>
+                <Typography sx={{ textAlign: 'center', color: '#fff' }}> Responder </Typography>
+              </Box>
+              <Box sx={{ cursor: 'pointer', backgroundColor: '#ff5d61', width: 120, height: 30, borderRadius: '4px', display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => setOpen(false)}>
+              <Typography sx={{ textAlign: 'center', color: '#fff' }}> Fechar </Typography>
+              </Box>
+            </Box>
+          </Paper>
+        </Modal>
+
     </Box>
   );
 }

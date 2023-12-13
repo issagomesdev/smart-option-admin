@@ -23,6 +23,9 @@ import Modal from '@mui/material/Modal';
 import { Extract } from "src/layouts/components/pages/requests/extract";
 import { Network } from "src/layouts/components/pages/requests/network";
 import { Withdrawal } from "src/layouts/components/pages/requests/withdrawal";
+import { Deposit } from "src/layouts/components/pages/requests/deposit";
+import { Subscription } from "src/layouts/components/pages/requests/subscription";
+import { Support } from "src/layouts/components/pages/requests/support";
 import { useAuth } from "src/providers/AuthContext"
 
 type Plans = 'bronze' | 'silver' | 'gold' | 'without';
@@ -69,6 +72,7 @@ const requests:Requests[] = [
   const [data, setData] = React.useState<any>(null);
   const [open, setOpen] = React.useState(false);
   const [renderItem, setRenderItem] = React.useState<number>();
+  const [notFound, setNotFound] = React.useState<boolean>(false);
   const router = useRouter();
   const { view } = router.query;
   const isSmallerThan809 = useMediaQuery('(max-width:808px)');
@@ -76,13 +80,14 @@ const requests:Requests[] = [
 
   useEffect(() => {
     botUser(view as string, token()).then(data => {
-      setData(data.data);
+      if(data) setData(data.data);
+      else setNotFound(true)
     }).catch(error => console.error(error));
 
   }, []);
 
 
-  if (data === null) {
+  if (data === null && !notFound) {
     return <BlankLayout>
       <Box className='content-center'>
         <PuffLoader
@@ -97,6 +102,14 @@ const requests:Requests[] = [
         />
       </Box>
     </BlankLayout>
+  }
+
+  if (notFound) {
+    return <Box sx={{ width: '100%',  marginY: '1em', flexGrow: 1 }}>
+    <Box sx={{ width: '100%', marginY: '1em' }}>
+      <Typography variant="subtitle1" sx={{textAlign: 'center'}}> Usuário não encontrado </Typography>
+    </Box>
+    </Box>
   }
 
   return (
@@ -211,7 +224,11 @@ const requests:Requests[] = [
       <Modal open={open}  sx={{ width: '100%', display: 'flex', justifyContent: 'center'}}>
           <Paper sx={{ position: 'relative', minWidth: '70%', padding: '30px', margin: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY:'auto'}}>         
             { renderItem == 1? <Extract userID={view as string} sx={{overflowY:'auto', maxHeight: 450 }}/> : renderItem == 2? <Network userID={view as string} sx={{overflowY:'auto', maxHeight: 450}}/> : 
-            renderItem == 3? <Withdrawal userID={view as string} sx={{overflowY:'auto', maxHeight: 450}}/> : null }
+            renderItem == 3? <Withdrawal userID={view as string} sx={{overflowY:'auto', maxHeight: 450}}/> :     
+            renderItem == 4? <Deposit userID={view as string} sx={{overflowY:'auto', maxHeight: 450}}/> :    
+            renderItem == 5? <Support userID={view as string} sx={{overflowY:'auto', maxHeight: 450}}/> :  
+            renderItem == 6? <Subscription userID={view as string} sx={{overflowY:'auto', maxHeight: 450}}/> :
+            null }
             <Box sx={{ cursor: 'pointer', backgroundColor: '#ff5d61', width: 120, height: 30, borderRadius: '4px', display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => setOpen(false)}>
               <Typography sx={{ textAlign: 'center', color: '#fff' }}> Fechar </Typography>
             </Box>

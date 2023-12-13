@@ -28,7 +28,7 @@ const HomePage = () => {
   
   return (
     <ApexChartWrapper>
-      <Grid container spacing={6}>
+      {/* <Grid container spacing={6}>
         <Grid item xs={12} md={4}>
           <Trophy />
         </Grid>
@@ -96,7 +96,7 @@ const HomePage = () => {
         <Grid item xs={12}>
           <Table />
         </Grid>
-      </Grid>
+      </Grid> */}
       <ToastContainer />
     </ApexChartWrapper>
   )
