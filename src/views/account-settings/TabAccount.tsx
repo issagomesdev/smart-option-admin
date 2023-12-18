@@ -22,7 +22,7 @@ import 'react-toastify/dist/ReactToastify.css';
 // ** Icons Imports
 import Close from 'mdi-material-ui/Close'
 import { useAuth } from "src/providers/AuthContext"
-import { editAccount } from "src/services/user.service"
+import { editAccount } from "src/services/users.service"
 const ImgStyled = styled('img')(({ theme }) => ({
   width: 120,
   height: 120,

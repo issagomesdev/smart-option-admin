@@ -406,9 +406,9 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
                 <Typography sx={{ textAlign: 'center', color: '#fff' }}> Fechar </Typography>
               </Box>
             </Box> 
+        <ToastContainer />
           </Paper>
         </Modal>
-        <ToastContainer />
     </Box>
   );
 }

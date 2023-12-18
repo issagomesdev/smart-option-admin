@@ -9,7 +9,7 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import Link from '@mui/material/Link';
-import { botUser } from "src/services/user.service";
+import { botUser } from "src/services/users.service";
 import { useEffect } from 'react';
 import themeConfig from "src/configs/themeConfig";
 import DefaultPalette from "src/@core/theme/palette";

@@ -20,7 +20,7 @@ import Switch from '@mui/material/Switch';
 import Link from '@mui/material/Link';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
-import { botUsers } from "src/services/user.service";
+import { botUsers } from "src/services/users.service";
 import { useEffect } from 'react';
 import themeConfig from "src/configs/themeConfig";
 import DefaultPalette from "src/@core/theme/palette";
