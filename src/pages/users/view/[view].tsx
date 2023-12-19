@@ -229,7 +229,7 @@ const requests:Requests[] = [
             renderItem == 5? <Support userID={view as string} sx={{overflowY:'auto', maxHeight: 450}}/> :  
             renderItem == 6? <Subscription userID={view as string} sx={{overflowY:'auto', maxHeight: 450}}/> :
             null }
-            <Box sx={{ cursor: 'pointer', backgroundColor: '#ff5d61', width: 120, height: 30, borderRadius: '4px', display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => setOpen(false)}>
+            <Box sx={{ cursor: 'pointer', backgroundColor: '#ff5d61', width: 120, height: 30, borderRadius: '4px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 5 }} onClick={() => setOpen(false)}>
               <Typography sx={{ textAlign: 'center', color: '#fff' }}> Fechar </Typography>
             </Box>
           </Paper>

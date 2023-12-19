@@ -21,10 +21,10 @@ import StatisticsCard from 'src/views/dashboard/StatisticsCard'
 import WeeklyOverview from 'src/views/dashboard/WeeklyOverview'
 import DepositWithdraw from 'src/views/dashboard/DepositWithdraw'
 import SalesByCountries from 'src/views/dashboard/SalesByCountries'
-import { Box, Paper, Typography, Select, MenuItem, InputLabel, FormControl } from "@mui/material"
+import { Box, Paper, Typography, Select, MenuItem, InputLabel, FormControl, TextField, Modal, useMediaQuery, useTheme } from "@mui/material"
 import { useAuth } from "src/providers/AuthContext";
 import { users, balance } from "src/services/dashboard.service";
-import { AccountMultiple, AccountMultipleCheck, Medal }  from 'mdi-material-ui';
+import { AccountMultiple, AccountMultipleCheck, Medal, RadioboxBlank, CheckCircle }  from 'mdi-material-ui';
 import { useEffect } from 'react';
 import BlankLayout from "src/@core/layouts/BlankLayout";
 import { PuffLoader } from "react-spinners";
@@ -38,7 +38,11 @@ const HomePage = () => {
   const [users_list, setUsers_list] = React.useState<any>([]);
   const [totalUsers, setTotalUsers] = React.useState<any>([]);
   const [ balanceTotal, setBalanceTotal] = React.useState<any>([]);
-  const [filters, setFilters] = React.useState<any>({ user_id: 'all', product_id: 'all', data: 'all' });
+  const [open, setOpen] = React.useState(false);
+  const [filters, setFilters] = React.useState<any>({ user: {id: 'all', name: 'Todos'}, product_id: 'all', period: 'all' });
+  const [ searchUser, setSearchUser] = React.useState<string>('');
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
 
   useEffect(() => {
     users(token()).then((data:any) => {
@@ -89,7 +93,7 @@ const HomePage = () => {
       }]);
     }).catch((error:any) => console.error(error));
 
-    botUsers(token()).then((data:any) => {
+    botUsers(token(), searchUser).then((data:any) => {
       setUsers_list(data.data);
     }).catch((error:any) => console.error(error));
     
@@ -108,6 +112,14 @@ const HomePage = () => {
     }).catch((error:any) => console.error(error));
 
   }, [filters]);
+
+  useEffect(() => {
+
+    botUsers(token(), searchUser).then((data:any) => {
+      setUsers_list(data.data);
+    }).catch((error:any) => console.error(error));
+
+  }, [searchUser]);
 
   if (totalUsers.length <= 0) {
     return <BlankLayout>
@@ -145,23 +157,13 @@ const HomePage = () => {
           <Grid container spacing={3}>
             <Grid item xs={12} sm={4}>
               <FormControl sx={{width: '100%'}}>
-                <InputLabel id="filter-for-user-label">Filtrar por Usuário</InputLabel>
-                  <Select fullWidth onChange={(event) => setFilters((values:any) => ({ ...values, user_id: event.target.value, product_id: 'all' }))}
-                  labelId="filter-for-user-label"
-                  id="filter-for-user"
-                  label="Filtrar por Usuário"
-                  value={filters.user_id}>
-                    <MenuItem value='all'>Todos</MenuItem>
-                    {users_list.map((user:any) => {
-                      return ( <MenuItem value={user.id}>{user.name}</MenuItem> )
-                    })}
-                  </Select>
+                <TextField fullWidth label='Filtrar por Usuário' value={filters.user.name} InputProps={{ readOnly: true }} onClick={() => { setOpen(true) }}/>
               </FormControl>
             </Grid> 
             <Grid item xs={12} sm={4}>
               <FormControl sx={{width: '100%'}}>
                 <InputLabel id="filter-for-product-label">Filtrar por Plano</InputLabel>
-                <Select fullWidth onChange={(event) => setFilters((values:any) => ({ ...values, product_id: event.target.value, user_id: 'all' }))}
+                <Select fullWidth onChange={(event) => setFilters((values:any) => ({ ...values, product_id: event.target.value, user: {id: 'all', name: 'Todos'} }))}
               value={filters.product_id}
               labelId="filter-for-product-label"
               id="filter-for-product"
@@ -175,12 +177,12 @@ const HomePage = () => {
             </Grid>
             <Grid item xs={12} sm={4}>
               <FormControl sx={{width: '100%'}}>
-                <InputLabel id="filter-for-data-label">Filtrar por Data</InputLabel>
-                <Select fullWidth onChange={(event) => setFilters((values:any) => ({ ...values, data: event.target.value }))}
-              value={filters.data}
-              labelId="filter-for-data-label"
-              id="filter-for-data"
-              label="Filtrar por Data">
+                <InputLabel id="filter-for-period-label">Filtrar por Periodo</InputLabel>
+                <Select fullWidth onChange={(event) => setFilters((values:any) => ({ ...values, period: event.target.value }))}
+              value={filters.period}
+              labelId="filter-for-period-label"
+              id="filter-for-period"
+              label="Filtrar por Periodo">
                 <MenuItem value='all'>Todos</MenuItem>
                 <MenuItem value={1}>Smart Bronze</MenuItem>
                 <MenuItem value={2}>Smart Silver</MenuItem>
@@ -203,6 +205,36 @@ const HomePage = () => {
         })}
           </Grid>
       </Box>
+
+      <Modal open={open} sx={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+          <Paper sx={{ position: 'relative', minWidth: isSmallScreen? '90%' : '60%', height: '70%', padding: '30px', margin: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+          <Box sx={{ width: '100%' }}>
+            <TextField fullWidth label="Search" type="search" placeholder="Pesquise por ID ou Nome" onChange={(event) => { setSearchUser(event.target.value)}}/>
+          </Box> 
+          
+          <Box sx={{ width: '100%', margin: 5, overflowY:'auto' }}>
+            <Box sx={{ paddingX: 1, paddingY: 3, display: 'flex', alignItems: 'center' }} onClick={() => { setFilters((values:any) => ({ ...values, user: {id: 'all', name: 'Todos'}, product_id: 'all' })), setOpen(false), setSearchUser('') }}>
+
+              { filters.user.id == 'all'? <CheckCircle sx={{ fontSize: 30, color: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient, cursor: 'pointer', marginRight: 3 }}/> : <RadioboxBlank sx={{ fontSize: 30, color: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient, cursor: 'pointer', marginRight: 3 }}/> }
+              
+              <Typography sx={{  }}> Todos </Typography>
+            </Box> 
+            {users_list.map((user:any) => {
+              return ( 
+                <Box sx={{ paddingX: 1, paddingY: 3, display: 'flex', alignItems: 'center' }} onClick={() => { setFilters((values:any) => ({ ...values, user: {id: user.id, name: user.name}, product_id: 'all' })), setOpen(false), setSearchUser('') }}>
+
+               { filters.user.id == user.id? <CheckCircle sx={{ fontSize: 30, color: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient, cursor: 'pointer', marginRight: 3 }}/> : <RadioboxBlank sx={{ fontSize: 30, color: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient, cursor: 'pointer', marginRight: 3 }}/> }
+                
+                <Typography sx={{  }}> #{user.id} - {user.name} </Typography>
+                </Box> 
+               )
+            })}
+          </Box>        
+          <Box sx={{ cursor: 'pointer', backgroundColor: '#ff5d61', width: 120, height: 30, borderRadius: '4px', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'absolute', bottom: 10 }} onClick={() => {setOpen(false), setSearchUser('')}}>
+            <Typography sx={{ textAlign: 'center', color: '#fff' }}> Fechar </Typography>
+          </Box>
+          </Paper>
+    </Modal>
     </ApexChartWrapper>
   )
 }

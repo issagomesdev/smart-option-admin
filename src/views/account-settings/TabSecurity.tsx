@@ -45,10 +45,12 @@ const TabSecurity = () => {
     showConfirmNewPassword: false
   })
 
+  const { token } = useAuth();
+
   const submit = async() => {
     try {
       if(values.newPassword === values.confirmNewPassword){
-        await updatePass({newPassword: values.newPassword, currentPassword: values.currentPassword, userId: user.id});
+        await updatePass({newPassword: values.newPassword, currentPassword: values.currentPassword, userId: user.id}, token());
         toast.success("Senha atualizada com sucesso!", {
           position: toast.POSITION.TOP_RIGHT,
           theme: "colored"

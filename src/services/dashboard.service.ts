@@ -23,7 +23,7 @@ export const balance = async(token:string, param:any) => {
   try {
 
       const response:any = await axios.get(
-        `${baseurl}/api/dashboard/balance/${param.user_id}/${param.product_id}`,
+        `${baseurl}/api/dashboard/balance/${param.user.id}/${param.product_id}/${param.period}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

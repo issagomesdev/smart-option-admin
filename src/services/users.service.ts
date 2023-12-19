@@ -37,11 +37,11 @@ export const updatePass = async(values:any, token:string) => {
         }
 }
 
-export const botUsers = async(token:string) => {
+export const botUsers = async(token:string, search:string = '') => {
   try {
 
       const response:any = await axios.get(
-        `${baseurl}/api/users/users-bot`,
+        `${baseurl}/api/users/users-bot/${search || 'all'}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
