@@ -21,9 +21,8 @@ export const users = async(token:string) => {
 
 export const balance = async(token:string, param:any) => {
   try {
-
       const response:any = await axios.get(
-        `${baseurl}/api/dashboard/balance/${param.user.id}/${param.product_id}/${param.period}`,
+        `${baseurl}/api/dashboard/balance/${param.user.value}/${param.product_id}/${param.interval.value}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

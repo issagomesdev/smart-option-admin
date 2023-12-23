@@ -31,6 +31,9 @@ import { PuffLoader } from "react-spinners";
 import DefaultPalette from "src/@core/theme/palette";
 import themeConfig from "src/configs/themeConfig";
 import { botUsers } from "src/services/users.service";
+import 'react-date-range/dist/styles.css'; 
+import 'react-date-range/dist/theme/default.css';
+import { DateRange } from 'react-date-range';
 
 const HomePage = () => {
   
@@ -38,11 +41,20 @@ const HomePage = () => {
   const [users_list, setUsers_list] = React.useState<any>([]);
   const [totalUsers, setTotalUsers] = React.useState<any>([]);
   const [ balanceTotal, setBalanceTotal] = React.useState<any>([]);
-  const [open, setOpen] = React.useState(false);
-  const [filters, setFilters] = React.useState<any>({ user: {id: 'all', name: 'Todos'}, product_id: 'all', period: 'all' });
+  const [openSearchUsers, setOpenSearchUsers] = React.useState(false);
+  const [openSelectInterval, setOpenSelectInterval] = React.useState(false);
+  const [interval, setInterval] = React.useState<any>([
+    {
+      startDate: null,
+      endDate: null,
+      key: 'selection'
+    }
+  ]);
+  const [filters, setFilters] = React.useState<any>({ user: {value: 'all', label: 'Todos'}, product_id: 'all', interval: {value: 'all', label: 'Todos'} });
   const [ searchUser, setSearchUser] = React.useState<string>('');
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
+
 
   useEffect(() => {
     users(token()).then((data:any) => {
@@ -121,6 +133,16 @@ const HomePage = () => {
 
   }, [searchUser]);
 
+  useEffect(() => {
+
+    if(interval[0].startDate && interval[0].endDate){
+      const value = `${String((interval[0].startDate).getDate()).padStart(2, '0')}-${String((interval[0].startDate).getMonth() + 1).padStart(2, '0')}-${(interval[0].startDate).getFullYear()} - ${String((interval[0].endDate).getDate()).padStart(2, '0')}-${String((interval[0].endDate).getMonth() + 1).padStart(2, '0')}-${(interval[0].endDate).getFullYear()}`;
+  
+      setFilters((values:any) => ({ ...values, interval: { value: value, label: value} }));
+    }
+
+  }, [interval]);
+
   if (totalUsers.length <= 0) {
     return <BlankLayout>
       <Box className='content-center'>
@@ -154,16 +176,16 @@ const HomePage = () => {
           </Grid>
       </Box>
       <Box style={{ marginTop: 10, padding: 10 }}>
-          <Grid container spacing={3}>
+      <Grid container spacing={3}>
             <Grid item xs={12} sm={4}>
               <FormControl sx={{width: '100%'}}>
-                <TextField fullWidth label='Filtrar por Usuário' value={filters.user.name} InputProps={{ readOnly: true }} onClick={() => { setOpen(true) }}/>
+                <TextField fullWidth label='Filtrar por Usuário' value={filters.user.label} InputProps={{ readOnly: true }} onClick={() => { setOpenSearchUsers(true); }}/>
               </FormControl>
             </Grid> 
             <Grid item xs={12} sm={4}>
               <FormControl sx={{width: '100%'}}>
                 <InputLabel id="filter-for-product-label">Filtrar por Plano</InputLabel>
-                <Select fullWidth onChange={(event) => setFilters((values:any) => ({ ...values, product_id: event.target.value, user: {id: 'all', name: 'Todos'} }))}
+                <Select fullWidth onChange={(event) => setFilters((values:any) => ({ ...values, product_id: event.target.value, user: {value: 'all', label: 'Todos'} }))}
               value={filters.product_id}
               labelId="filter-for-product-label"
               id="filter-for-product"
@@ -176,19 +198,7 @@ const HomePage = () => {
               </FormControl> 
             </Grid>
             <Grid item xs={12} sm={4}>
-              <FormControl sx={{width: '100%'}}>
-                <InputLabel id="filter-for-period-label">Filtrar por Periodo</InputLabel>
-                <Select fullWidth onChange={(event) => setFilters((values:any) => ({ ...values, period: event.target.value }))}
-              value={filters.period}
-              labelId="filter-for-period-label"
-              id="filter-for-period"
-              label="Filtrar por Periodo">
-                <MenuItem value='all'>Todos</MenuItem>
-                <MenuItem value={1}>Smart Bronze</MenuItem>
-                <MenuItem value={2}>Smart Silver</MenuItem>
-                <MenuItem value={3}>Smart Gold</MenuItem>
-                </Select>
-              </FormControl> 
+            <TextField fullWidth label='Filtrar por Período' value={filters.interval.label} InputProps={{ readOnly: true }} onClick={() => { setOpenSelectInterval(true) }}/>
             </Grid>
           </Grid>
       </Box>
@@ -206,35 +216,57 @@ const HomePage = () => {
           </Grid>
       </Box>
 
-      <Modal open={open} sx={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+      <Modal open={openSearchUsers} sx={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
           <Paper sx={{ position: 'relative', minWidth: isSmallScreen? '90%' : '60%', height: '70%', padding: '30px', margin: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
           <Box sx={{ width: '100%' }}>
             <TextField fullWidth label="Search" type="search" placeholder="Pesquise por ID ou Nome" onChange={(event) => { setSearchUser(event.target.value)}}/>
           </Box> 
           
           <Box sx={{ width: '100%', margin: 5, overflowY:'auto' }}>
-            <Box sx={{ paddingX: 1, paddingY: 3, display: 'flex', alignItems: 'center' }} onClick={() => { setFilters((values:any) => ({ ...values, user: {id: 'all', name: 'Todos'}, product_id: 'all' })), setOpen(false), setSearchUser('') }}>
+            <Box sx={{ paddingX: 1, paddingY: 3, display: 'flex', alignItems: 'center' }} onClick={() => { setFilters((values:any) => ({ ...values, user: {value: 'all', label: 'Todos'}, product_id: 'all' })), setOpenSearchUsers(false), setSearchUser('') }}>
 
-              { filters.user.id == 'all'? <CheckCircle sx={{ fontSize: 30, color: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient, cursor: 'pointer', marginRight: 3 }}/> : <RadioboxBlank sx={{ fontSize: 30, color: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient, cursor: 'pointer', marginRight: 3 }}/> }
+              { filters.user.value == 'all'? <CheckCircle sx={{ fontSize: 30, color: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient, cursor: 'pointer', marginRight: 3 }}/> : <RadioboxBlank sx={{ fontSize: 30, color: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient, cursor: 'pointer', marginRight: 3 }}/> }
               
-              <Typography sx={{  }}> Todos </Typography>
+              <Typography> Todos </Typography>
             </Box> 
             {users_list.map((user:any) => {
               return ( 
-                <Box sx={{ paddingX: 1, paddingY: 3, display: 'flex', alignItems: 'center' }} onClick={() => { setFilters((values:any) => ({ ...values, user: {id: user.id, name: user.name}, product_id: 'all' })), setOpen(false), setSearchUser('') }}>
+                <Box sx={{ paddingX: 1, paddingY: 3, display: 'flex', alignItems: 'center' }} onClick={() => { setFilters((values:any) => ({ ...values, user: {value: user.id, label: user.name}, product_id: 'all' })), setOpenSearchUsers(false), setSearchUser('') }}>
 
-               { filters.user.id == user.id? <CheckCircle sx={{ fontSize: 30, color: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient, cursor: 'pointer', marginRight: 3 }}/> : <RadioboxBlank sx={{ fontSize: 30, color: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient, cursor: 'pointer', marginRight: 3 }}/> }
+               { filters.user.value == user.id? <CheckCircle sx={{ fontSize: 30, color: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient, cursor: 'pointer', marginRight: 3 }}/> : <RadioboxBlank sx={{ fontSize: 30, color: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient, cursor: 'pointer', marginRight: 3 }}/> }
                 
                 <Typography sx={{  }}> #{user.id} - {user.name} </Typography>
                 </Box> 
                )
             })}
           </Box>        
-          <Box sx={{ cursor: 'pointer', backgroundColor: '#ff5d61', width: 120, height: 30, borderRadius: '4px', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'absolute', bottom: 10 }} onClick={() => {setOpen(false), setSearchUser('')}}>
+          <Box sx={{ cursor: 'pointer', backgroundColor: '#ff5d61', width: 120, height: 30, borderRadius: '4px', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'absolute', bottom: 10 }} onClick={() => {setOpenSearchUsers(false), setSearchUser('')}}>
             <Typography sx={{ textAlign: 'center', color: '#fff' }}> Fechar </Typography>
           </Box>
           </Paper>
-    </Modal>
+      </Modal>
+      
+      <Modal open={openSelectInterval} sx={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+          <Paper sx={{ position: 'relative', minWidth: isSmallScreen? '90%' : '60%', height: '70%', padding: '30px', margin: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+          
+          <Box>
+            <DateRange
+            editableDateInputs={true}
+            onChange={item => setInterval([item.selection])}
+            moveRangeOnFirstSelection={false}
+            ranges={interval}/>
+          </Box>
+
+          <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center',  }} >
+            <Box sx={{ cursor: 'pointer', backgroundColor: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient, width: 120, height: 30, borderRadius: '4px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginRight: 5 }} onClick={() => {setOpenSelectInterval(false)}}>
+              <Typography sx={{ textAlign: 'center', color: '#fff' }}> Confirmar </Typography>
+            </Box>
+            <Box sx={{ cursor: 'pointer', backgroundColor: '#ff5d61', width: 120, height: 30, borderRadius: '4px', display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => {setOpenSelectInterval(false), setFilters((values:any) => ({ ...values, interval: { value: 'all', label: 'Todos'} })) }}>
+            <Typography sx={{ textAlign: 'center', color: '#fff' }}> Limpar </Typography>
+            </Box>
+          </Box>
+          </Paper>
+      </Modal>
     </ApexChartWrapper>
   )
 }

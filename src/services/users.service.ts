@@ -55,6 +55,25 @@ export const botUsers = async(token:string, search:string = '') => {
       }
 }
 
+export const botUsersWithFilter = async(token:string, filter:any) => {
+  try {
+
+      const response:any = await axios.post(
+        `${baseurl}/api/users/users-bot`,
+        filter,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+        return response
+      } catch (error:any) {
+          console.error(error)
+      }
+}
+
 export const botUser = async(id:string, token:string) => {
   try {
       const response:any = await axios.get(

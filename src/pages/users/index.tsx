@@ -11,16 +11,16 @@ import TableRow from '@mui/material/TableRow';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
+import { TextField } from "@mui/material";
 import Paper from '@mui/material/Paper';
 import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
 import Link from '@mui/material/Link';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
-import { botUsers } from "src/services/users.service";
+import { botUsers, botUsersWithFilter } from "src/services/users.service";
 import { useEffect } from 'react';
 import themeConfig from "src/configs/themeConfig";
 import DefaultPalette from "src/@core/theme/palette";
@@ -31,6 +31,7 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { useRouter } from 'next/router';
 import { useAuth } from "src/providers/AuthContext";
+import {Select, FormControl, InputLabel} from "@mui/material";
 
 interface Data {
   id: number,
@@ -84,6 +85,7 @@ interface HeadCell {
   disablePadding: boolean;
   id: keyof Data;
   label: string;
+  padding: number;
   numeric: boolean;
 }
 
@@ -91,48 +93,56 @@ const headCells: readonly HeadCell[] = [
   {
     id: 'id',
     numeric: true,
+    padding: 30,
     disablePadding: false,
     label: 'ID',
   },
   {
     id: 'name',
     numeric: false,
+    padding: 60,
     disablePadding: true,
     label: 'Nome',
   },
   {
     id: 'email',
     numeric: false,
+    padding: 0,
     disablePadding: false,
     label: 'Email',
   },
   {
     id: 'plan',
     numeric: false,
+    padding: 0,
     disablePadding: false,
     label: 'Plano',
   },
   {
     id: 'telegram',
     numeric: false,
+    padding: 30,
     disablePadding: false,
     label: 'Telegram',
   },
   {
     id: 'status',
     numeric: true,
+    padding: 0,
     disablePadding: false,
     label: 'Situação',
   },
   {
     id: 'created_at',
     numeric: false,
+    padding: 20,
     disablePadding: false,
     label: 'Cadastrado em',
   },
   {
     id: 'actions',
     numeric: false,
+    padding: 0,
     disablePadding: false,
     label: 'Ações',
   },
@@ -159,8 +169,9 @@ function EnhancedTableHead(props: EnhancedTableProps) {
         {headCells.map((headCell) => (
           <TableCell
             key={headCell.id}
-            align={'left'}
+            align={'center'}
             padding={'normal'}
+            style={{ paddingLeft: headCell.padding, paddingRight: headCell.padding}}
             sortDirection={orderBy === headCell.id ? order : false}
           >
             <TableSortLabel
@@ -210,6 +221,9 @@ function EnhancedTableToolbar() {
     </Toolbar>
   );
 }
+
+
+
 export default function Users() {
   const [order, setOrder] = React.useState<Order>('asc');
   const [orderBy, setOrderBy] = React.useState<keyof Data>('id');
@@ -219,6 +233,7 @@ export default function Users() {
   const [rows, setRows] = React.useState<Data[]>([]);
   const [actions, setActions] = React.useState<null | HTMLElement>(null); 
   const [isEmpty, setIsEmpty] = React.useState<boolean>(false);
+  const [filters, setFilters] = React.useState<any>({ user_id: '', name: '', email: '', product_id: 'all', telegram: '', status: 'all', created_at: '' });
   const [id, setId] = React.useState<any>({}); 
   const router = useRouter();
   const { token } = useAuth();
@@ -236,7 +251,21 @@ export default function Users() {
 
   }, []);
 
+  useEffect(() => {
+
+    botUsersWithFilter(token(), filters).then(data => {
+      const res = data.data.map(function(user:any) {
+        return {id: user.id, name: user.name, email: user.email, plan: user.plan, telegram: user.telegram, status: user.status, created_at: user.created_at};
+      });
+
+      if(res.length <= 0) setIsEmpty(true);
+      else setRows(res), setIsEmpty(false);
+
+      console.log(rows)
   
+    }).catch(error => console.error(error));
+
+  }, [filters]);
 
   let visibleRows = React.useMemo(
     () =>
@@ -318,9 +347,69 @@ export default function Users() {
 
   if (isEmpty) {
     return <Box sx={{ width: '100%',  marginY: '1em', flexGrow: 1 }}>
-    <Box sx={{ width: '100%', marginY: '1em' }}>
-      <Typography variant="subtitle1" sx={{textAlign: 'center'}}> Não há registros de usuários no momento </Typography>
-    </Box>
+      <Paper sx={{ width: '100%', mb: 2 }}>
+        <EnhancedTableToolbar/>
+        <TableContainer>
+          <Table
+            sx={{ minWidth: 750 }}
+            aria-labelledby="tableTitle"
+            size={"medium"}>
+            <EnhancedTableHead
+              order={order}
+              orderBy={orderBy}
+              onRequestSort={handleRequestSort}
+              rowCount={rows.length}/>
+
+            <TableHead>
+              <TableRow>
+                <TableCell align="center"> 
+                    <TextField value={filters.user_id} inputProps={{ style: { height: "10px" } }} fullWidth size="small" onChange={(event) => setFilters((values:any) => ({ ...values, user_id: event.target.value }))}/>
+                </TableCell>
+                <TableCell align="center"> 
+                    <TextField value={filters.name} inputProps={{ style: { height: "10px" } }} fullWidth size="small" onChange={(event) => setFilters((values:any) => ({ ...values, name: event.target.value }))}/>
+                </TableCell>
+                <TableCell align="center"> 
+                    <TextField value={filters.email} inputProps={{ style: { height: "10px" } }} fullWidth size="small" onChange={(event) => setFilters((values:any) => ({ ...values, email: event.target.value }))}/>
+                </TableCell>
+                <TableCell align="center"> 
+                  <FormControl sx={{width: '100%'}} variant="outlined" size="small">
+                      <Select size="small" style={{ height: '25px' }} value={filters.product_id} onChange={(event) => setFilters((values:any) => ({ ...values, product_id: event.target.value }))}>
+                      <MenuItem value='all'>Todos</MenuItem>
+                      <MenuItem value={1}>Bronze</MenuItem>
+                      <MenuItem value={2}>Silver</MenuItem>
+                      <MenuItem value={3}>Gold</MenuItem>
+                      </Select>
+                    </FormControl> 
+                </TableCell>
+                <TableCell align="center"> 
+                    <TextField inputProps={{ style: { height: "10px" } }} fullWidth size="small" value={filters.telegram} onChange={(event) => setFilters((values:any) => ({ ...values, telegram: event.target.value }))}/>
+                </TableCell>
+                <TableCell align="center"> 
+                <FormControl sx={{width: '100%'}} variant="outlined" size="small">
+                      <Select size="small" style={{ height: '25px' }} value={filters.status} onChange={(event) => setFilters((values:any) => ({ ...values, status: event.target.value }))}>
+                      <MenuItem value='all'>Todos</MenuItem>
+                      <MenuItem value={0}>Inativo</MenuItem>
+                      <MenuItem value={1}>Ativo</MenuItem>
+                      </Select>
+                    </FormControl> 
+                </TableCell>
+                <TableCell align="center"> 
+                    <TextField inputProps={{ style: { height: "10px" } }} fullWidth size="small" value={filters.created_at} onChange={(event) => setFilters((values:any) => ({ ...values, created_at: event.target.value }))}/>
+                </TableCell>
+                <TableCell align="center"> 
+                </TableCell>
+              </TableRow>
+            </TableHead>
+    
+          </Table>
+        </TableContainer>
+
+            
+  <Box sx={{ width: '100%', marginY: '1em' }}>
+    <Typography variant="subtitle1" sx={{textAlign: 'center'}}> Não há registros de usuários no momento </Typography>
+  </Box>
+          
+      </Paper>
     </Box>
   }
 
@@ -341,6 +430,48 @@ export default function Users() {
               onRequestSort={handleRequestSort}
               rowCount={rows.length}
             />
+
+<TableHead>
+          <TableRow>
+            <TableCell align="center"> 
+                <TextField value={filters.user_id} inputProps={{ style: { height: "10px" } }} fullWidth size="small" onChange={(event) => setFilters((values:any) => ({ ...values, user_id: event.target.value }))}/>
+            </TableCell>
+            <TableCell align="center"> 
+                <TextField value={filters.name} inputProps={{ style: { height: "10px" } }} fullWidth size="small" onChange={(event) => setFilters((values:any) => ({ ...values, name: event.target.value }))}/>
+            </TableCell>
+            <TableCell align="center"> 
+                <TextField value={filters.email} inputProps={{ style: { height: "10px" } }} fullWidth size="small" onChange={(event) => setFilters((values:any) => ({ ...values, email: event.target.value }))}/>
+            </TableCell>
+            <TableCell align="center"> 
+              <FormControl sx={{width: '100%'}} variant="outlined" size="small">
+                  <Select size="small" style={{ height: '25px' }} value={filters.product_id} onChange={(event) => setFilters((values:any) => ({ ...values, product_id: event.target.value }))}>
+                  <MenuItem value='all'>Todos</MenuItem>
+                  <MenuItem value={1}>Bronze</MenuItem>
+                  <MenuItem value={2}>Silver</MenuItem>
+                  <MenuItem value={3}>Gold</MenuItem>
+                  </Select>
+                </FormControl> 
+            </TableCell>
+            <TableCell align="center"> 
+                <TextField inputProps={{ style: { height: "10px" } }} fullWidth size="small" value={filters.telegram} onChange={(event) => setFilters((values:any) => ({ ...values, telegram: event.target.value }))}/>
+            </TableCell>
+            <TableCell align="center"> 
+            <FormControl sx={{width: '100%'}} variant="outlined" size="small">
+                  <Select size="small" style={{ height: '25px' }} value={filters.status} onChange={(event) => setFilters((values:any) => ({ ...values, status: event.target.value }))}>
+                  <MenuItem value='all'>Todos</MenuItem>
+                  <MenuItem value={0}>Inativo</MenuItem>
+                  <MenuItem value={1}>Ativo</MenuItem>
+                  </Select>
+                </FormControl> 
+            </TableCell>
+            <TableCell align="center"> 
+                <TextField inputProps={{ style: { height: "10px" } }} fullWidth size="small" value={filters.created_at} onChange={(event) => setFilters((values:any) => ({ ...values, created_at: event.target.value }))}/>
+            </TableCell>
+            <TableCell align="center"> 
+            </TableCell>
+          </TableRow>
+        </TableHead>
+
             <TableBody>
               {visibleRows.map((row, index) => {
 
