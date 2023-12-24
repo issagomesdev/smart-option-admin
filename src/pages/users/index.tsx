@@ -20,7 +20,7 @@ import Switch from '@mui/material/Switch';
 import Link from '@mui/material/Link';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
-import { botUsers, botUsersWithFilter } from "src/services/users.service";
+import { botUsersWithFilter } from "src/services/users.service";
 import { useEffect } from 'react';
 import themeConfig from "src/configs/themeConfig";
 import DefaultPalette from "src/@core/theme/palette";
@@ -39,10 +39,12 @@ interface Data {
   email: string,
   plan: string,
   telegram: string,
+  balance: string,
   status: number,
   created_at: string,
   actions: string
 }
+
 type Plans = 'bronze' | 'silver' | 'gold' | 'without';
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
@@ -124,6 +126,13 @@ const headCells: readonly HeadCell[] = [
     padding: 30,
     disablePadding: false,
     label: 'Telegram',
+  },
+  {
+    id: 'balance',
+    numeric: false,
+    padding: 20,
+    disablePadding: false,
+    label: 'Saldo',
   },
   {
     id: 'status',
@@ -233,35 +242,20 @@ export default function Users() {
   const [rows, setRows] = React.useState<Data[]>([]);
   const [actions, setActions] = React.useState<null | HTMLElement>(null); 
   const [isEmpty, setIsEmpty] = React.useState<boolean>(false);
-  const [filters, setFilters] = React.useState<any>({ user_id: '', name: '', email: '', product_id: 'all', telegram: '', status: 'all', created_at: '' });
+  const [filters, setFilters] = React.useState<any>({ user_id: '', name: '', email: '', product_id: 'all', telegram: '', balance: '', status: 'all', created_at: '' });
   const [id, setId] = React.useState<any>({}); 
   const router = useRouter();
   const { token } = useAuth();
 
   useEffect(() => {
 
-    botUsers(token()).then(data => {
-      const res = data.data.map(function(user:any) {
-        return {id: user.id, name: user.name, email: user.email, plan: user.plan, telegram: user.telegram, status: user.status, created_at: user.created_at};
-      });
-      if(res.length <= 0) setIsEmpty(true);
-      else setRows(res);
-  
-    }).catch(error => console.error(error));
-
-  }, []);
-
-  useEffect(() => {
-
     botUsersWithFilter(token(), filters).then(data => {
       const res = data.data.map(function(user:any) {
-        return {id: user.id, name: user.name, email: user.email, plan: user.plan, telegram: user.telegram, status: user.status, created_at: user.created_at};
+        return {id: user.id, name: user.name, email: user.email, plan: user.plan, telegram: user.telegram, status: user.status, balance: user.balance, created_at: user.created_at};
       });
 
       if(res.length <= 0) setIsEmpty(true);
       else setRows(res), setIsEmpty(false);
-
-      console.log(rows)
   
     }).catch(error => console.error(error));
 
@@ -385,6 +379,9 @@ export default function Users() {
                     <TextField inputProps={{ style: { height: "10px" } }} fullWidth size="small" value={filters.telegram} onChange={(event) => setFilters((values:any) => ({ ...values, telegram: event.target.value }))}/>
                 </TableCell>
                 <TableCell align="center"> 
+                <TextField inputProps={{ style: { height: "10px" } }} fullWidth size="small" value={filters.balance} onChange={(event) => setFilters((values:any) => ({ ...values, balance: event.target.value }))}/>
+                </TableCell>
+                <TableCell align="center"> 
                 <FormControl sx={{width: '100%'}} variant="outlined" size="small">
                       <Select size="small" style={{ height: '25px' }} value={filters.status} onChange={(event) => setFilters((values:any) => ({ ...values, status: event.target.value }))}>
                       <MenuItem value='all'>Todos</MenuItem>
@@ -456,6 +453,9 @@ export default function Users() {
                 <TextField inputProps={{ style: { height: "10px" } }} fullWidth size="small" value={filters.telegram} onChange={(event) => setFilters((values:any) => ({ ...values, telegram: event.target.value }))}/>
             </TableCell>
             <TableCell align="center"> 
+            <TextField inputProps={{ style: { height: "10px" } }} fullWidth size="small" value={filters.balance} onChange={(event) => setFilters((values:any) => ({ ...values, balance: event.target.value }))}/>
+            </TableCell>
+            <TableCell align="center"> 
             <FormControl sx={{width: '100%'}} variant="outlined" size="small">
                   <Select size="small" style={{ height: '25px' }} value={filters.status} onChange={(event) => setFilters((values:any) => ({ ...values, status: event.target.value }))}>
                   <MenuItem value='all'>Todos</MenuItem>
@@ -517,6 +517,7 @@ export default function Users() {
                       {row.telegram} 
                     </Link>
                     }</TableCell>
+                    <TableCell>R$ { parseFloat(row.balance).toFixed(2)}</TableCell>
                     <TableCell>{row.status? 
                       <Box
                       bgcolor={DefaultPalette(themeConfig.mode, 'primary').success.light}

@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { alpha } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -11,26 +10,17 @@ import TableRow from '@mui/material/TableRow';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import Paper from '@mui/material/Paper';
-import Checkbox from '@mui/material/Checkbox';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Switch from '@mui/material/Switch';
-import Link from '@mui/material/Link';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
-import { extract } from "src/services/requests.service";
+import { extract, extractWithFilter } from "src/services/requests.service";
 import { useEffect } from 'react';
 import themeConfig from "src/configs/themeConfig";
 import DefaultPalette from "src/@core/theme/palette";
 import { PuffLoader } from 'react-spinners';
 import BlankLayout from "src/@core/layouts/BlankLayout";
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { useRouter } from 'next/router';
 import { useAuth } from "src/providers/AuthContext";
+import { TextField, FormControl, Select } from "@mui/material";
 
 interface Data {
   id: number,
@@ -157,12 +147,16 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 function EnhancedTableToolbar(props: any) {
     const { balance } = props;
   return (
-    <Toolbar
-    >
-    <Typography variant="h6">
-        Saldo Atual R$ {balance}
-    </Typography>
-    </Toolbar>
+    <Box>
+      <Toolbar>
+        <Typography variant="h6">Extrato</Typography>
+      </Toolbar>
+      <Toolbar>
+        <Typography variant="subtitle1">
+        Saldo Atual R$ {parseFloat(balance).toFixed(2)}
+        </Typography>
+      </Toolbar>
+    </Box>
   );
 }
 
@@ -180,6 +174,8 @@ export const Extract: React.FC<ExtractProps> = ({ userID, sx }) => {
   const [rows, setRows] = React.useState<Data[]>([]);
   const [balance, setBalance] = React.useState<string>();
   const [isEmpty, setIsEmpty] = React.useState<boolean>(false);
+  const [filters, setFilters] = React.useState<any>({ value: '', origin: 'all', created_at: '' });
+  const [createdAt, setCeatedAt] = React.useState<Date|null>(new Date());
   const router = useRouter();
   const { token } = useAuth();
 
@@ -193,12 +189,23 @@ export const Extract: React.FC<ExtractProps> = ({ userID, sx }) => {
       if(res.length <= 0) setIsEmpty(true);
       else setRows(res), setBalance(`${data.data.balance}`);
 
-      
-      
-  
     }).catch(error => console.error(error));
 
   }, []);
+
+  useEffect(() => {
+
+    extractWithFilter(userID, token(), filters).then(data => {
+      const res = data.data.extract.map(function(data:any) {
+        return {id: data.id, value: data.value, reference_id: data.reference_id, type: data.type, origin: data.origin, created_at: data.created_at };
+      });
+
+      if(res.length <= 0) setIsEmpty(true);
+      else setRows(res), setBalance(`${data.data.balance}`), setIsEmpty(false);
+
+    }).catch(error => console.error(error));
+
+  }, [filters]);
 
   
 
@@ -281,10 +288,57 @@ export const Extract: React.FC<ExtractProps> = ({ userID, sx }) => {
   }
 
   if (isEmpty) {
-    return <Box sx={{ width: '100%',  marginY: '1em', flexGrow: 1 }}>
-    <Box sx={{ width: '100%', marginY: '1em' }}>
-      <Typography variant="subtitle1" sx={{textAlign: 'center'}}> Não há registros de movimentações no extrato no momento </Typography>
-    </Box>
+    return <Box sx={{ width: '100%' }}>
+        <EnhancedTableToolbar balance={balance}/>
+        <TableContainer sx={sx}>
+          <Table
+            sx={{ minWidth: 750 }}
+            aria-labelledby="tableTitle"
+            size={"medium"}
+          >
+            <EnhancedTableHead
+              order={order}
+              orderBy={orderBy}
+              onRequestSort={handleRequestSort}
+              rowCount={rows.length}
+            />
+
+          <TableHead>
+              <TableRow>
+                <TableCell align="center">
+                </TableCell>
+                <TableCell align="center"> 
+                    <TextField value={filters.value} inputProps={{ style: { height: "10px" } }} fullWidth size="small" onChange={(event) => setFilters((values:any) => ({ ...values, value: event.target.value }))}/>
+                </TableCell>
+                <TableCell align="center"> 
+                  <FormControl sx={{width: '100%'}} variant="outlined" size="small">
+                      <Select size="small" style={{ height: '25px' }} value={filters.origin} onChange={(event) => setFilters((values:any) => ({ ...values, origin: event.target.value }))}>
+                      <MenuItem value='all'>Todos</MenuItem>
+                      <MenuItem value='deposit'>Depósito</MenuItem>
+                      <MenuItem value='withdraw'>Saque</MenuItem>
+                      <MenuItem value='subscription'>Adesão</MenuItem>
+                      <MenuItem value='tuition'>Mensalidade</MenuItem>
+                      <MenuItem value='earnings'>Rentabilidade</MenuItem>
+                      <MenuItem value='profitability'>Bônus de Rentabilidade</MenuItem>
+                      <MenuItem value='B.A'>Bônus de Adesão</MenuItem>
+                      <MenuItem value='B.M'>Bônus de Mensalidade</MenuItem>
+                      </Select>
+                    </FormControl> 
+                </TableCell>
+                <TableCell align="center"> 
+                
+                  <TextField type="date" inputProps={{ style: { height: "10px" } }} fullWidth size="small" value={filters.created_at} onChange={(event) => setFilters((values:any) => ({ ...values, created_at: event.target.value }))}/> 
+
+                </TableCell>
+              </TableRow>
+            </TableHead>
+          </Table>
+        </TableContainer>
+
+                   
+        <Box sx={{ width: '100%', marginY: '1em' }}>
+          <Typography variant="subtitle1" sx={{textAlign: 'center'}}> Não há registros de movimentações no extrato no momento </Typography>
+        </Box>
     </Box>
   }
 
@@ -303,6 +357,37 @@ export const Extract: React.FC<ExtractProps> = ({ userID, sx }) => {
               onRequestSort={handleRequestSort}
               rowCount={rows.length}
             />
+
+<TableHead>
+              <TableRow>
+                <TableCell align="center">
+                </TableCell>
+                <TableCell align="center"> 
+                    <TextField value={filters.value} inputProps={{ style: { height: "10px" } }} fullWidth size="small" onChange={(event) => setFilters((values:any) => ({ ...values, value: event.target.value }))}/>
+                </TableCell>
+                <TableCell align="center"> 
+                  <FormControl sx={{width: '100%'}} variant="outlined" size="small">
+                      <Select size="small" style={{ height: '25px' }} value={filters.origin} onChange={(event) => setFilters((values:any) => ({ ...values, origin: event.target.value }))}>
+                      <MenuItem value='all'>Todos</MenuItem>
+                      <MenuItem value='deposit'>Depósito</MenuItem>
+                      <MenuItem value='withdraw'>Saque</MenuItem>
+                      <MenuItem value='subscription'>Adesão</MenuItem>
+                      <MenuItem value='tuition'>Mensalidade</MenuItem>
+                      <MenuItem value='earnings'>Rentabilidade</MenuItem>
+                      <MenuItem value='profitability'>Bônus de Rentabilidade</MenuItem>
+                      <MenuItem value='B.A'>Bônus de Adesão</MenuItem>
+                      <MenuItem value='B.M'>Bônus de Mensalidade</MenuItem>
+                      </Select>
+                    </FormControl> 
+                </TableCell>
+                <TableCell align="center"> 
+
+                  <TextField type="date" inputProps={{ style: { height: "10px" } }} fullWidth size="small" value={filters.created_at} onChange={(event) => setFilters((values:any) => ({ ...values, created_at: event.target.value }))}/> 
+                    
+                </TableCell>
+              </TableRow>
+            </TableHead>
+
             <TableBody>
               {visibleRows.map((row, index) => {
 
@@ -317,7 +402,7 @@ export const Extract: React.FC<ExtractProps> = ({ userID, sx }) => {
                     
                     <TableCell>{row.id}</TableCell>
                     <TableCell>{row.type == 'sum'? '+' : '-'} {row.value}</TableCell>
-                    <TableCell>{row.origin == "deposit"? "Depósito" : row.origin == "withdraw"? "Saque" : row.origin == "earnings"? "Ganhos": row.origin == "profitability"? `B.R.#${row.reference_id}` : row.origin == "subscription"? `${row.type == "sum"? `B.A.#${row.reference_id}` : 'Adesão'}` : row.origin == "tuition"? `${row.type == "sum"? `B.M.#${row.reference_id}` : 'Mensalidade'}` : "Outros"}</TableCell>
+                    <TableCell>{row.origin == "deposit"? "Depósito" : row.origin == "withdraw"? "Saque" : row.origin == "subscription"? `${row.type == "sum"? `B.A.#${row.reference_id}` : 'Adesão'}` : row.origin == "tuition"? `${row.type == "sum"? `B.M.#${row.reference_id}` : 'Mensalidade'}` : row.origin == "earnings"? "Rentabilidade": row.origin == "profitability"? `B.R.#${row.reference_id}` : "Outros"}</TableCell>
                     <TableCell>{row.created_at}</TableCell>
                   </TableRow>
                 );

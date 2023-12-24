@@ -18,6 +18,23 @@ export const extract = async(userId:any, token:string) => {
         }
 }
 
+export const extractWithFilter = async(userId:any, token:string, filters:string) => {
+  try {
+      const response:any = await axios.post(
+        `${baseurl}/api/requests/extract/${userId}`, filters,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+        return response
+      } catch (error:any) {
+          console.error(error)
+      }
+}
+
 export const withdrawal = async(userId:any, token:string) => {
   try {
       const response:any = await axios.get(
