@@ -31,7 +31,7 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { useRouter } from 'next/router';
 import { useAuth } from "src/providers/AuthContext";
-
+import { TextField, FormControl, Select } from "@mui/material";
 interface Data {
   id: number,
   user_id: string,
@@ -187,20 +187,21 @@ export const Deposit: React.FC<ExtractProps> = ({ userID = null, sx }) => {
   const [actions, setActions] = React.useState<null | HTMLElement>(null);
   const [isEmpty, setIsEmpty] = React.useState<boolean>(false); 
   const [id, setId] = React.useState<any>({}); 
+  const [filters, setFilters] = React.useState<any>({ id: '', name: '', value: '', status: 'all', created_at: '' });
   const router = useRouter();
   const { token } = useAuth();
 
   useEffect(() => {
 
-    deposit(userID, token()).then(data => {
+    deposit(userID, token(), filters).then(data => {
        const res = data.data.map(function(data:any) {
         return {id: data.id, user_id: data.user_id, user: data.name, value: data.value, reference_id: data.reference_id, status: data.status, transaction_id: data.transaction_id, created_at: data.created_at };
       });
       if(res.length <= 0) setIsEmpty(true);
-      else setRows(res);
+      else setRows(res), setIsEmpty(false);
     }).catch(error => console.error(error));
 
-  }, []);
+  }, [filters]);
 
   
 
@@ -283,10 +284,57 @@ export const Deposit: React.FC<ExtractProps> = ({ userID = null, sx }) => {
   }
 
   if (isEmpty) {
-    return <Box sx={{ width: '100%',  marginY: '1em', flexGrow: 1 }}>
-    <Box sx={{ width: '100%', marginY: '1em' }}>
-      <Typography variant="subtitle1" sx={{textAlign: 'center'}}> Não há registros de solicitações de depósito no momento </Typography>
-    </Box>
+    return <Box sx={{ width: '100%' }}>
+    <EnhancedTableToolbar/>
+    <TableContainer sx={sx}>
+      <Table
+        sx={{ width: 1000 }}
+        aria-labelledby="tableTitle"
+        size={"medium"}
+      >
+        <EnhancedTableHead
+          order={order}
+          orderBy={orderBy}
+          onRequestSort={handleRequestSort}
+          rowCount={rows.length}
+        />
+
+        <TableHead>
+          <TableRow>
+            <TableCell align="center"> 
+                <TextField value={filters.id} inputProps={{ style: { height: "10px" } }} fullWidth size="small" onChange={(event) => setFilters((values:any) => ({ ...values, id: event.target.value }))}/>
+            </TableCell>
+            <TableCell align="center"> 
+                <TextField value={filters.name} inputProps={{ style: { height: "10px" } }} fullWidth size="small" onChange={(event) => setFilters((values:any) => ({ ...values, name: event.target.value }))}/>
+            </TableCell>
+            <TableCell align="center"> 
+                <TextField value={filters.value} inputProps={{ style: { height: "10px" } }} fullWidth size="small" onChange={(event) => setFilters((values:any) => ({ ...values, value: event.target.value }))}/>
+            </TableCell>
+            <TableCell align="center"> 
+              <FormControl sx={{width: '100%'}} variant="outlined" size="small">
+                  <Select size="small" style={{ height: '25px' }} value={filters.status} onChange={(event) => setFilters((values:any) => ({ ...values, status: event.target.value }))}>
+                  <MenuItem value='all'>Todos</MenuItem>
+                  <MenuItem value='PENDING'>Pendente</MenuItem>
+                  <MenuItem value='AUTHORIZED'>Pre-Autorizado</MenuItem>
+                  <MenuItem value='PAID'>Concluído</MenuItem>
+                  <MenuItem value='IN_ANALYSIS'>Em análise</MenuItem>
+                  <MenuItem value='DECLINED'>Recusado</MenuItem>
+                  <MenuItem value='CANCELED'>Cancelado</MenuItem>
+                  </Select>
+                </FormControl> 
+            </TableCell>
+            <TableCell align="center"> 
+              <TextField type="date" inputProps={{ style: { height: "10px" } }} fullWidth size="small" value={filters.created_at} onChange={(event) => setFilters((values:any) => ({ ...values, created_at: event.target.value }))}/> 
+            </TableCell>
+            <TableCell></TableCell>
+          </TableRow>
+        </TableHead>
+
+      </Table>
+    </TableContainer>
+      <Box sx={{ width: '100%', marginY: '1em' }}>
+        <Typography variant="subtitle1" sx={{textAlign: 'center'}}> Não há registros de solicitações de depósito no momento </Typography>
+      </Box>
     </Box>
   }
 
@@ -295,7 +343,7 @@ export const Deposit: React.FC<ExtractProps> = ({ userID = null, sx }) => {
         <EnhancedTableToolbar/>
         <TableContainer sx={sx}>
           <Table
-            sx={{ minWidth: 750 }}
+            sx={{ width: 1000 }}
             aria-labelledby="tableTitle"
             size={"medium"}
           >
@@ -305,6 +353,38 @@ export const Deposit: React.FC<ExtractProps> = ({ userID = null, sx }) => {
               onRequestSort={handleRequestSort}
               rowCount={rows.length}
             />
+
+            <TableHead>
+              <TableRow>
+                <TableCell align="center"> 
+                    <TextField value={filters.id} inputProps={{ style: { height: "10px" } }} fullWidth size="small" onChange={(event) => setFilters((values:any) => ({ ...values, id: event.target.value }))}/>
+                </TableCell>
+                <TableCell align="center"> 
+                    <TextField value={filters.name} inputProps={{ style: { height: "10px" } }} fullWidth size="small" onChange={(event) => setFilters((values:any) => ({ ...values, name: event.target.value }))}/>
+                </TableCell>
+                <TableCell align="center"> 
+                    <TextField value={filters.value} inputProps={{ style: { height: "10px" } }} fullWidth size="small" onChange={(event) => setFilters((values:any) => ({ ...values, value: event.target.value }))}/>
+                </TableCell>
+                <TableCell align="center"> 
+                  <FormControl sx={{width: '100%'}} variant="outlined" size="small">
+                      <Select size="small" style={{ height: '25px' }} value={filters.status} onChange={(event) => setFilters((values:any) => ({ ...values, status: event.target.value }))}>
+                      <MenuItem value='all'>Todos</MenuItem>
+                      <MenuItem value='PENDING'>Pendente</MenuItem>
+                      <MenuItem value='AUTHORIZED'>Pre-Autorizado</MenuItem>
+                      <MenuItem value='PAID'>Concluído</MenuItem>
+                      <MenuItem value='IN_ANALYSIS'>Em análise</MenuItem>
+                      <MenuItem value='DECLINED'>Recusado</MenuItem>
+                      <MenuItem value='CANCELED'>Cancelado</MenuItem>
+                      </Select>
+                    </FormControl> 
+                </TableCell>
+                <TableCell align="center"> 
+                  <TextField type="date" inputProps={{ style: { height: "10px" } }} fullWidth size="small" value={filters.created_at} onChange={(event) => setFilters((values:any) => ({ ...values, created_at: event.target.value }))}/> 
+                </TableCell>
+                <TableCell></TableCell>
+              </TableRow>
+            </TableHead>
+
             <TableBody>
               {visibleRows.map((row, index) => {
 

@@ -11,6 +11,7 @@ import { Withdrawal } from "src/layouts/components/pages/requests/withdrawal";
 import { Deposit } from "src/layouts/components/pages/requests/deposit";
 import { Subscription } from "src/layouts/components/pages/requests/subscription";
 import { Support } from "src/layouts/components/pages/requests/support";
+import Badge from '@mui/material/Badge';
 
 interface Requests {
   id: number;

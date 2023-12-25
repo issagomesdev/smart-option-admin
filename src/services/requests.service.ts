@@ -35,10 +35,10 @@ export const extractWithFilter = async(userId:any, token:string, filters:string)
       }
 }
 
-export const withdrawal = async(userId:any, token:string) => {
+export const withdrawal = async(userId:any, token:string, filters:any) => {
   try {
-      const response:any = await axios.get(
-        `${baseurl}/api/requests/withdrawal/${userId}`,
+      const response:any = await axios.post(
+        `${baseurl}/api/requests/withdrawal/${userId}`, filters,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -52,10 +52,10 @@ export const withdrawal = async(userId:any, token:string) => {
       }
 }
 
-export const deposit = async(userId:any, token:string) => {
+export const deposit = async(userId:any, token:string, filters:any) => {
   try {
-      const response:any = await axios.get(
-        `${baseurl}/api/requests/deposit/${userId}`,
+      const response:any = await axios.post(
+        `${baseurl}/api/requests/deposit/${userId}`, filters,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -69,10 +69,10 @@ export const deposit = async(userId:any, token:string) => {
       }
 }
 
-export const subscription = async(userId:any, token:string) => {
+export const subscription = async(userId:any, token:string, filters:any) => {
   try {
-      const response:any = await axios.get(
-        `${baseurl}/api/requests/subscription/${userId}`,
+      const response:any = await axios.post(
+        `${baseurl}/api/requests/subscription/${userId}`, filters,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -86,10 +86,10 @@ export const subscription = async(userId:any, token:string) => {
       }
 }
 
-export const support = async(userId:any, token:string) => {
+export const support = async(userId:any, token:string, filters:any) => {
   try {
-      const response:any = await axios.get(
-        `${baseurl}/api/requests/support/${userId}`,
+      const response:any = await axios.post(
+        `${baseurl}/api/requests/support/${userId}`, filters,
         {
           headers: {
             Authorization: `Bearer ${token}`,

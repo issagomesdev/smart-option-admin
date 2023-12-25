@@ -33,6 +33,7 @@ import { useRouter } from 'next/router';
 import { useAuth } from "src/providers/AuthContext";
 import Grid from '@mui/material/Grid';
 import { HumanCapacityDecrease, HumanCapacityIncrease }  from 'mdi-material-ui';
+import { FormControl, TextField, Select } from "@mui/material";
 
 interface Data {
   id: number,
@@ -192,14 +193,15 @@ export const Network: React.FC<ExtractProps> = ({ userID, sx }) => {
   const [guests, setGuests] = React.useState<Data[]>([]); 
   const [affiliates, setAffiliates] = React.useState<Data[]>([]);
   const [actions, setActions] = React.useState<null | HTMLElement>(null);  
-  const [typeOfNetwork, setTypeOfNetwork] = React.useState<number>();
+  const [typeOfNetwork, setTypeOfNetwork] = React.useState<number|null>(null);
   const [id, setId] = React.useState<any>({}); 
+  const [filters, setFilters] = React.useState<any>({ id: '', name: '', level: 'all', status: 'all'  });
   const router = useRouter();
   const { token } = useAuth();
 
   useEffect(() => {
 
-    network(userID, token()).then(data => {
+    network(userID, token(), filters).then(data => {
       const data_affiliates = data.data.affiliates.map(function(data:any) {
         return {id: data.id, name: data.name, level: data.level, status: data.status };
       });
@@ -214,7 +216,13 @@ export const Network: React.FC<ExtractProps> = ({ userID, sx }) => {
   
     }).catch(error => console.error(error));
 
-  }, []);
+  }, [filters]);
+
+  useEffect(() => {
+
+    selectTypeOfNetwork(typeOfNetwork);
+
+  }, [guests, affiliates]);
 
   let visibleRows = React.useMemo(
     () =>
@@ -262,9 +270,11 @@ export const Network: React.FC<ExtractProps> = ({ userID, sx }) => {
     )
   }
 
-  const selectTypeOfNetwork = (id: number) =>{ 
-    setTypeOfNetwork(id);
-    id == 1? setRows(guests) : setRows(affiliates);
+  const selectTypeOfNetwork = (id: number|null) =>{ 
+    if(id){
+      setTypeOfNetwork(id);
+      id == 1? setRows(guests) : setRows(affiliates);
+    }
   }
 
   // Avoid a layout jump when reaching the last page with empty rows.
@@ -274,9 +284,125 @@ export const Network: React.FC<ExtractProps> = ({ userID, sx }) => {
   if (rows.length <= 0) {
     return (
     <Box sx={{ width: '100%',  marginY: '1em', flexGrow: 1 }}>
+      <Box sx={{ width: '100%' }}>
       <TypeOfNetwork/>
+        <EnhancedTableToolbar/>
+        <TableContainer sx={sx}>
+          <Table
+            sx={{ minWidth: 750 }}
+            aria-labelledby="tableTitle"
+            size={"medium"}
+          >
+            <EnhancedTableHead
+              order={order}
+              orderBy={orderBy}
+              onRequestSort={handleRequestSort}
+              rowCount={rows.length}
+            />
+
+            <TableHead>
+              <TableRow>
+                <TableCell align="center"> 
+                    <TextField value={filters.id} inputProps={{ style: { height: "10px" } }} fullWidth size="small" onChange={(event) => setFilters((values:any) => ({ ...values, id: event.target.value }))}/>
+                </TableCell>
+                <TableCell align="center"> 
+                    <TextField value={filters.name} inputProps={{ style: { height: "10px" } }} fullWidth size="small" onChange={(event) => setFilters((values:any) => ({ ...values, name: event.target.value }))}/>
+                </TableCell>
+                <TableCell align="center"> 
+                  <FormControl sx={{width: '100%'}} variant="outlined" size="small">
+                      <Select size="small" style={{ height: '25px' }} value={filters.level} onChange={(event) => setFilters((values:any) => ({ ...values, level: event.target.value }))}>
+                      <MenuItem value='all'>Todos</MenuItem>
+                      <MenuItem value={1}>Nivel 1</MenuItem>
+                      <MenuItem value={2}>Nivel 2</MenuItem>
+                      <MenuItem value={3}>Nivel 3</MenuItem>
+                      </Select>
+                    </FormControl> 
+                </TableCell>
+                <TableCell align="center"> 
+                  <FormControl sx={{width: '100%'}} variant="outlined" size="small">
+                      <Select size="small" style={{ height: '25px' }} value={filters.status} onChange={(event) => setFilters((values:any) => ({ ...values, status: event.target.value }))}>
+                      <MenuItem value='all'>Todos</MenuItem>
+                      <MenuItem value={0}>Inativo</MenuItem>
+                      <MenuItem value={1}>Ativo</MenuItem>
+                      </Select>
+                    </FormControl> 
+                </TableCell>
+                <TableCell align="center"> </TableCell>
+              </TableRow>
+            </TableHead>
+
+            <TableBody>
+              {visibleRows.map((row, index) => {
+
+                return (
+                  <TableRow
+                    hover
+                    role="checkbox"
+                    tabIndex={-1}
+                    key={row.id}
+                    sx={{ cursor: 'pointer' }}
+                  >
+                    <TableCell>{row.id}</TableCell>
+                    <TableCell>{row.name}</TableCell>
+                    <TableCell>{row.level}</TableCell> <TableCell>{row.status? 
+                      <Box
+                      bgcolor={DefaultPalette(themeConfig.mode, 'primary').success.light}
+                      borderRadius={16}
+                      textAlign="center"
+                      color="white">
+                        Ativo
+                      </Box> : 
+                      <Box
+                      bgcolor={DefaultPalette(themeConfig.mode, 'primary').error.main}
+                      borderRadius={16}
+                      textAlign="center"
+                      color="white">
+                        Inativo
+                      </Box>
+                    }</TableCell>
+                    <TableCell>
+                      <IconButton
+                      edge="end"
+                      color="inherit"
+                      aria-label="menu"
+                      aria-haspopup="true"
+                      onClick={(event) =>{setActions(event.currentTarget as HTMLElement); setId(row.id) }}>
+                        <MoreVertIcon/>
+                      </IconButton>
+                        <Menu
+                        anchorEl={actions}
+                        open={Boolean(actions)}
+                        PaperProps={{
+                          style: {
+                            boxShadow: 'rgb(0 0 0 / 5%) 0px 0px 6px',
+                          },
+                        }}
+                        onClose={() => setActions(null)}>
+                          <MenuItem onClick={() => router.push(`/users/view/${id}`)}> Visualizar </MenuItem>
+                        </Menu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+              {emptyRows > 0 && (
+                <TableRow
+                  style={{
+                    height: 53 * emptyRows,
+                  }}
+                >
+                  <TableCell colSpan={6} />
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        
+    
     <Box sx={{ width: '100%', marginY: '1em' }}>
       <Typography variant="subtitle1" sx={{textAlign: 'center'}}> {typeOfNetwork == 1? 'Usuário sem afiliados no momento' : typeOfNetwork == 2? '  Usuário sem afiliações no momento': ''} </Typography>
+    </Box>
+
     </Box>
     </Box>
     )
@@ -298,6 +424,38 @@ export const Network: React.FC<ExtractProps> = ({ userID, sx }) => {
               onRequestSort={handleRequestSort}
               rowCount={rows.length}
             />
+
+            <TableHead>
+              <TableRow>
+                <TableCell align="center"> 
+                    <TextField value={filters.id} inputProps={{ style: { height: "10px" } }} fullWidth size="small" onChange={(event) => setFilters((values:any) => ({ ...values, id: event.target.value }))}/>
+                </TableCell>
+                <TableCell align="center"> 
+                    <TextField value={filters.name} inputProps={{ style: { height: "10px" } }} fullWidth size="small" onChange={(event) => setFilters((values:any) => ({ ...values, name: event.target.value }))}/>
+                </TableCell>
+                <TableCell align="center"> 
+                  <FormControl sx={{width: '100%'}} variant="outlined" size="small">
+                      <Select size="small" style={{ height: '25px' }} value={filters.level} onChange={(event) => setFilters((values:any) => ({ ...values, level: event.target.value }))}>
+                      <MenuItem value='all'>Todos</MenuItem>
+                      <MenuItem value={1}>Nivel 1</MenuItem>
+                      <MenuItem value={2}>Nivel 2</MenuItem>
+                      <MenuItem value={3}>Nivel 3</MenuItem>
+                      </Select>
+                    </FormControl> 
+                </TableCell>
+                <TableCell align="center"> 
+                  <FormControl sx={{width: '100%'}} variant="outlined" size="small">
+                      <Select size="small" style={{ height: '25px' }} value={filters.status} onChange={(event) => setFilters((values:any) => ({ ...values, status: event.target.value }))}>
+                      <MenuItem value='all'>Todos</MenuItem>
+                      <MenuItem value={0}>Inativo</MenuItem>
+                      <MenuItem value={1}>Ativo</MenuItem>
+                      </Select>
+                    </FormControl> 
+                </TableCell>
+                <TableCell align="center"> </TableCell>
+              </TableRow>
+            </TableHead>
+
             <TableBody>
               {visibleRows.map((row, index) => {
 

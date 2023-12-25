@@ -153,7 +153,7 @@ function EnhancedTableToolbar(props: any) {
       </Toolbar>
       <Toolbar>
         <Typography variant="subtitle1">
-        Saldo Atual R$ {parseFloat(balance).toFixed(2)}
+        Saldo Atual R$ {Number(balance)? Number(balance).toFixed(2) : '0.00'}
         </Typography>
       </Toolbar>
     </Box>
@@ -181,20 +181,6 @@ export const Extract: React.FC<ExtractProps> = ({ userID, sx }) => {
 
   useEffect(() => {
 
-    extract(userID, token()).then(data => {
-      const res = data.data.extract.map(function(data:any) {
-        return {id: data.id, value: data.value, reference_id: data.reference_id, type: data.type, origin: data.origin, created_at: data.created_at };
-      });
-
-      if(res.length <= 0) setIsEmpty(true);
-      else setRows(res), setBalance(`${data.data.balance}`);
-
-    }).catch(error => console.error(error));
-
-  }, []);
-
-  useEffect(() => {
-
     extractWithFilter(userID, token(), filters).then(data => {
       const res = data.data.extract.map(function(data:any) {
         return {id: data.id, value: data.value, reference_id: data.reference_id, type: data.type, origin: data.origin, created_at: data.created_at };
@@ -206,8 +192,6 @@ export const Extract: React.FC<ExtractProps> = ({ userID, sx }) => {
     }).catch(error => console.error(error));
 
   }, [filters]);
-
-  
 
   let visibleRows = React.useMemo(
     () =>
@@ -358,7 +342,7 @@ export const Extract: React.FC<ExtractProps> = ({ userID, sx }) => {
               rowCount={rows.length}
             />
 
-<TableHead>
+            <TableHead>
               <TableRow>
                 <TableCell align="center">
                 </TableCell>
