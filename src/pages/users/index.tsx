@@ -18,7 +18,7 @@ import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Switch from '@mui/material/Switch';
 import Link from '@mui/material/Link';
-import FilterListIcon from '@mui/icons-material/FilterList';
+import { PlusOne } from '@mui/icons-material';
 import { visuallyHidden } from '@mui/utils';
 import { botUsersWithFilter } from "src/services/users.service";
 import { useEffect } from 'react';
@@ -31,7 +31,8 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { useRouter } from 'next/router';
 import { useAuth } from "src/providers/AuthContext";
-import {Select, FormControl, InputLabel} from "@mui/material";
+import { Select, FormControl, InputLabel } from "@mui/material";
+import { BottleSoda } from "mdi-material-ui";
 
 interface Data {
   id: number,
@@ -41,6 +42,7 @@ interface Data {
   telegram: string,
   balance: string,
   status: number,
+  is_active: number,
   created_at: string,
   actions: string
 }
@@ -142,6 +144,13 @@ const headCells: readonly HeadCell[] = [
     label: 'Situação',
   },
   {
+    id: 'is_active',
+    numeric: false,
+    padding: 20,
+    disablePadding: false,
+    label: 'Bloqueio',
+  },
+  {
     id: 'created_at',
     numeric: false,
     padding: 20,
@@ -207,26 +216,21 @@ interface EnhancedTableToolbarProps {
 }
 
 function EnhancedTableToolbar() {
+  const router = useRouter();
   return (
     <Toolbar
-      sx={{
-        pl: { sm: 10 },
-        pr: { xs: 1, sm: 1 },
-      }}
     >
       <Typography
-          sx={{ flex: '1 1 100%' }}
+          sx={{ marginRight: 2 }}
           variant="h6"
           id="tableTitle"
           component="div"
         >
           Usuários 
       </Typography>
-      <Tooltip title="Filter list">
-          <IconButton>
-            <FilterListIcon />
-          </IconButton>
-        </Tooltip>
+          <Box sx={{ cursor: 'pointer', backgroundColor: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient, borderRadius: 2 }} onClick={() => router.push(`/users/create`)}>
+            <Typography sx={{ color: '#fff', fontWeight: 600, paddingX: 3 }}> Novo </Typography>
+          </Box>
     </Toolbar>
   );
 }
@@ -242,7 +246,7 @@ export default function Users() {
   const [rows, setRows] = React.useState<Data[]>([]);
   const [actions, setActions] = React.useState<null | HTMLElement>(null); 
   const [isEmpty, setIsEmpty] = React.useState<boolean>(false);
-  const [filters, setFilters] = React.useState<any>({ user_id: '', name: '', email: '', product_id: 'all', telegram: '', balance: '', status: 'all', created_at: '' });
+  const [filters, setFilters] = React.useState<any>({ user_id: '', name: '', email: '', product_id: 'all', telegram: '', balance: '', status: 'all', is_active: 'all', created_at: '' });
   const [id, setId] = React.useState<any>({}); 
   const router = useRouter();
   const { token } = useAuth();
@@ -251,7 +255,7 @@ export default function Users() {
 
     botUsersWithFilter(token(), filters).then(data => {
       const res = data.data.map(function(user:any) {
-        return {id: user.id, name: user.name, email: user.email, plan: user.plan, telegram: user.telegram, status: user.status, balance: user.balance, created_at: user.created_at};
+        return {id: user.id, name: user.name, email: user.email, plan: user.plan, telegram: user.telegram, status: user.status, is_active: user.is_active, balance: user.balance, created_at: user.created_at};
       });
 
       if(res.length <= 0) setIsEmpty(true);
@@ -382,13 +386,22 @@ export default function Users() {
                 <TextField inputProps={{ style: { height: "10px" } }} fullWidth size="small" value={filters.balance} onChange={(event) => setFilters((values:any) => ({ ...values, balance: event.target.value }))}/>
                 </TableCell>
                 <TableCell align="center"> 
-                <FormControl sx={{width: '100%'}} variant="outlined" size="small">
+                    <FormControl sx={{width: '100%'}} variant="outlined" size="small">
                       <Select size="small" style={{ height: '25px' }} value={filters.status} onChange={(event) => setFilters((values:any) => ({ ...values, status: event.target.value }))}>
                       <MenuItem value='all'>Todos</MenuItem>
                       <MenuItem value={0}>Inativo</MenuItem>
                       <MenuItem value={1}>Ativo</MenuItem>
                       </Select>
                     </FormControl> 
+                </TableCell>
+                <TableCell align="center"> 
+                  <FormControl sx={{width: '100%'}} variant="outlined" size="small">
+                    <Select size="small" style={{ height: '25px' }} value={filters.is_active} onChange={(event) => setFilters((values:any) => ({ ...values, is_active: event.target.value }))}>
+                      <MenuItem value='all'>Todos</MenuItem>
+                      <MenuItem value={0}>Bloqueado</MenuItem>
+                      <MenuItem value={1}>Ativo</MenuItem>
+                    </Select>
+                  </FormControl> 
                 </TableCell>
                 <TableCell align="center"> 
                     <TextField inputProps={{ style: { height: "10px" } }} fullWidth size="small" value={filters.created_at} onChange={(event) => setFilters((values:any) => ({ ...values, created_at: event.target.value }))}/>
@@ -465,6 +478,15 @@ export default function Users() {
                 </FormControl> 
             </TableCell>
             <TableCell align="center"> 
+              <FormControl sx={{width: '100%'}} variant="outlined" size="small">
+                <Select size="small" style={{ height: '25px' }} value={filters.is_active} onChange={(event) => setFilters((values:any) => ({ ...values, is_active: event.target.value }))}>
+                  <MenuItem value='all'>Todos</MenuItem>
+                  <MenuItem value={0}>Bloqueado</MenuItem>
+                  <MenuItem value={1}>Ativo</MenuItem>
+                </Select>
+              </FormControl> 
+            </TableCell>
+            <TableCell align="center"> 
                 <TextField inputProps={{ style: { height: "10px" } }} fullWidth size="small" value={filters.created_at} onChange={(event) => setFilters((values:any) => ({ ...values, created_at: event.target.value }))}/>
             </TableCell>
             <TableCell align="center"> 
@@ -534,6 +556,7 @@ export default function Users() {
                         Inativo
                       </Box>
                     }</TableCell>
+                    <TableCell>{row.is_active}</TableCell>
                     <TableCell>{row.created_at}</TableCell>
                     <TableCell>
                       <IconButton
@@ -554,6 +577,7 @@ export default function Users() {
                         }}
                         onClose={() => setActions(null)}>
                           <MenuItem onClick={() => router.push(`/users/view/${id}`)}> Visualizar </MenuItem>
+                          <MenuItem onClick={() => router.push(`/users/update/${id}`)}> Editar </MenuItem>
                         </Menu>
                     </TableCell>
                   </TableRow>
