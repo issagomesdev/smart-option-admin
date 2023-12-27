@@ -105,18 +105,40 @@ export const newBotUser = async(body:any, token:string) => {
 }
 
 export const upBotUser = async(body:any, token:string) => {
-  try {
-      const response:any = await axios.patch(
-        `${baseurl}/api/users/user-bot/`, body,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+  const response:any = await axios.patch(
+    `${baseurl}/api/users/user-bot/`, body,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 
-        return response
-      } catch (error:any) {
-          console.error(error)
-      }
+    return response
+}
+
+export const lockBotUser = async(userID:string, status:string, token:string) => {
+  const response:any = await axios.put(
+    `${baseurl}/api/users/user-bot/${userID}/${status}`, {},
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+    return response
+}
+
+export const transfUserAdmin = async(body:any, token:string) => {
+  const response:any = await axios.post(
+    `${baseurl}/api/users/transf-user-admin`, body,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+    return response
 }

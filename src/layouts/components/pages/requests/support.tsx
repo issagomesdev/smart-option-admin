@@ -19,8 +19,10 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
 import Link from '@mui/material/Link';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { visuallyHidden } from '@mui/utils';
-import { support } from "src/services/requests.service";
+import { support, requestWasRead } from "src/services/requests.service";
 import { useEffect } from 'react';
 import themeConfig from "src/configs/themeConfig";
 import DefaultPalette from "src/@core/theme/palette";
@@ -33,7 +35,7 @@ import { useRouter } from 'next/router';
 import { useAuth } from "src/providers/AuthContext";
 import Modal from '@mui/material/Modal';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { FormControl, Select, TextField } from "@mui/material";
+import { FormControl, Select, TextField, Button } from "@mui/material";
 
 interface Data {
   id: number,
@@ -42,6 +44,7 @@ interface Data {
   product: string,
   subject: string,
   type: string,
+  is_read:string,
   telegram: string,
   created_at: string,
   actions: string
@@ -108,6 +111,12 @@ const headCells: readonly HeadCell[] = [
     numeric: false,
     disablePadding: true,
     label: 'Assunto',
+  },
+  {
+    id: 'is_read',
+    numeric: false,
+    disablePadding: true,
+    label: 'Concluído',
   },
   {
     id: 'created_at',
@@ -191,25 +200,49 @@ export const Support: React.FC<ExtractProps> = ({ userID = null, sx }) => {
   const [actions, setActions] = React.useState<null | HTMLElement>(null);
   const [isEmpty, setIsEmpty] = React.useState<boolean>(false); 
   const [openItem, setOpenItem] = React.useState<any>({}); 
-  const [filters, setFilters] = React.useState<any>({ id: '', name: '', type: 'all', created_at: '' });
+  const [filters, setFilters] = React.useState<any>({ id: '', name: '', is_read: 'all', type: 'all', created_at: '' });
   const [open, setOpen] = React.useState(false);
   const { token } = useAuth();
   const isSmallerThan = useMediaQuery('(max-width:830px)');
 
-  useEffect(() => {
-
+  const getRequests = () => {
+    
     support(userID, token(), filters).then(data => {
-        const res = data.data.map(function(data:any) {
-            return {id: data.id, user_id: data.user_id, user: data.name, product: data.product, subject: data.subject, type: data.type, telegram: data.telegram_user_id, created_at: data.created_at };
-          });
-          if(res.length <= 0) setIsEmpty(true);
-          else setRows(res), setIsEmpty(false);
-      
-    }).catch(error => console.error(error));
+      const res = data.data.map(function(data:any) {
+          return {id: data.id, user_id: data.user_id, user: data.name, product: data.product, subject: data.subject, is_read: data.is_read, type: data.type, telegram: data.telegram_user_id, created_at: data.created_at };
+        });
+        if(res.length <= 0) setIsEmpty(true);
+        else setRows(res), setIsEmpty(false);
+    
+      }).catch(error => console.error(error));
+  
+  }
 
+  useEffect(() => {
+    getRequests()
   }, [filters]);
 
-  
+  const wasRead = async(userId:number, status:boolean) => {
+    const confirmed = window.confirm(`Marcar essa solicitação como ${!status? 'não ' : ''}concluído?`);
+    if(confirmed) {
+      
+      try {
+            
+        const response = await requestWasRead(userId, status? '1' : '0', token())
+        getRequests();
+        toast.success(response.data.message, {
+          position: toast.POSITION.TOP_RIGHT,
+          theme: "colored"
+        });
+          
+        } catch (error:any) {
+          toast.error(error, {
+            position: toast.POSITION.TOP_RIGHT,
+            theme: "colored"
+          });
+        } 
+    }
+  }
 
   let visibleRows = React.useMemo(
     () =>
@@ -322,6 +355,15 @@ export const Support: React.FC<ExtractProps> = ({ userID = null, sx }) => {
                 </FormControl> 
             </TableCell>
             <TableCell align="center"> 
+              <FormControl sx={{width: '100%'}} variant="outlined" size="small">
+                  <Select size="small" style={{ height: '25px' }} value={filters.is_read} onChange={(event) => setFilters((values:any) => ({ ...values, is_read: event.target.value }))}>
+                  <MenuItem value='all'>Todos</MenuItem>
+                  <MenuItem value={1}>Sim</MenuItem>
+                  <MenuItem value={0}>Não</MenuItem>
+                  </Select>
+                </FormControl> 
+            </TableCell>
+            <TableCell align="center"> 
               <TextField type="date" inputProps={{ style: { height: "10px" } }} fullWidth size="small" value={filters.created_at} onChange={(event) => setFilters((values:any) => ({ ...values, created_at: event.target.value }))}/> 
             </TableCell>
             <TableCell></TableCell>
@@ -371,6 +413,15 @@ export const Support: React.FC<ExtractProps> = ({ userID = null, sx }) => {
                 </FormControl> 
             </TableCell>
             <TableCell align="center"> 
+              <FormControl sx={{width: '100%'}} variant="outlined" size="small">
+                  <Select size="small" style={{ height: '25px' }} value={filters.is_read} onChange={(event) => setFilters((values:any) => ({ ...values, is_read: event.target.value }))}>
+                  <MenuItem value='all'>Todos</MenuItem>
+                  <MenuItem value={1}>Sim</MenuItem>
+                  <MenuItem value={0}>Não</MenuItem>
+                  </Select>
+                </FormControl> 
+            </TableCell>
+            <TableCell align="center"> 
               <TextField type="date" inputProps={{ style: { height: "10px" } }} fullWidth size="small" value={filters.created_at} onChange={(event) => setFilters((values:any) => ({ ...values, created_at: event.target.value }))}/> 
             </TableCell>
             <TableCell></TableCell>
@@ -400,6 +451,7 @@ export const Support: React.FC<ExtractProps> = ({ userID = null, sx }) => {
                       </Link>
                     </TableCell>
                     <TableCell>{row.type == "support"? "Suporte Técnico" : "Adesão de Serviço"}</TableCell>
+                    <TableCell> <Checkbox checked={row.is_read? true : false} onChange={(event) => { wasRead(row.id, event.target.checked) }}/> </TableCell>
                     <TableCell>{row.created_at}</TableCell>
                     <TableCell>
                       <IconButton
@@ -463,8 +515,8 @@ export const Support: React.FC<ExtractProps> = ({ userID = null, sx }) => {
               </Box>
             </Box>
           </Paper>
-        </Modal>
-
+      </Modal>
+        <ToastContainer />
     </Box>
   );
 }

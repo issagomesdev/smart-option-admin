@@ -14,13 +14,16 @@ import Typography from '@mui/material/Typography';
 import { TextField } from "@mui/material";
 import Paper from '@mui/material/Paper';
 import Checkbox from '@mui/material/Checkbox';
+import Modal from '@mui/material/Modal';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Switch from '@mui/material/Switch';
 import Link from '@mui/material/Link';
 import { PlusOne } from '@mui/icons-material';
 import { visuallyHidden } from '@mui/utils';
-import { botUsersWithFilter } from "src/services/users.service";
+import { botUsersWithFilter, lockBotUser, transfUserAdmin } from "src/services/users.service";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { useEffect } from 'react';
 import themeConfig from "src/configs/themeConfig";
 import DefaultPalette from "src/@core/theme/palette";
@@ -31,7 +34,7 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { useRouter } from 'next/router';
 import { useAuth } from "src/providers/AuthContext";
-import { Select, FormControl, InputLabel } from "@mui/material";
+import { Select, FormControl, InputLabel, FormControlLabel } from "@mui/material";
 import { BottleSoda } from "mdi-material-ui";
 
 interface Data {
@@ -242,17 +245,18 @@ export default function Users() {
   const [orderBy, setOrderBy] = React.useState<keyof Data>('id');
   const [selected, setSelected] = React.useState<readonly number[]>([]);
   const [page, setPage] = React.useState(0);
+  const [open, setOpen] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [rows, setRows] = React.useState<Data[]>([]);
   const [actions, setActions] = React.useState<null | HTMLElement>(null); 
   const [isEmpty, setIsEmpty] = React.useState<boolean>(false);
   const [filters, setFilters] = React.useState<any>({ user_id: '', name: '', email: '', product_id: 'all', telegram: '', balance: '', status: 'all', is_active: 'all', created_at: '' });
+  const [transf, setTransf] = React.useState<any>({ user_id: '', value: '', type: '' });
   const [id, setId] = React.useState<any>({}); 
   const router = useRouter();
   const { token } = useAuth();
 
-  useEffect(() => {
-
+  const getUsers = () => {
     botUsersWithFilter(token(), filters).then(data => {
       const res = data.data.map(function(user:any) {
         return {id: user.id, name: user.name, email: user.email, plan: user.plan, telegram: user.telegram, status: user.status, is_active: user.is_active, balance: user.balance, created_at: user.created_at};
@@ -262,7 +266,10 @@ export default function Users() {
       else setRows(res), setIsEmpty(false);
   
     }).catch(error => console.error(error));
+  }
 
+  useEffect(() => {
+    getUsers();
   }, [filters]);
 
   let visibleRows = React.useMemo(
@@ -283,33 +290,53 @@ export default function Users() {
     setOrderBy(property);
   };
 
-  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.checked) {
-      const newSelected = rows.map((n) => n.id);
-      setSelected(newSelected);
-      return;
-    }
-    setSelected([]);
+  const userLock = async(userID:number, status:boolean) => {
+    try {
+            
+      const response = await lockBotUser(`${userID}`, status? '0' : '1', token())
+
+      toast.success(response.data.message, {
+        position: toast.POSITION.TOP_RIGHT,
+        theme: "colored"
+      });
+        
+      } catch (error:any) {
+        toast.error(error, {
+          position: toast.POSITION.TOP_RIGHT,
+          theme: "colored"
+        });
+      } 
   };
 
-  const handleClick = (event: React.MouseEvent<unknown>, id: number) => {
-    const selectedIndex = selected.indexOf(id);
-    let newSelected: readonly number[] = [];
+  const makeTransfer = async() => {
+    if(transf.user_id && transf.value && transf.type){
 
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, id);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1),
-      );
+      try {
+            
+        const response = await transfUserAdmin(transf, token());
+        setTransf({ user_id: '', value: '', type: '' });
+        setOpen(false);
+        getUsers();
+  
+        toast.success(response.data.message, {
+          position: toast.POSITION.TOP_RIGHT,
+          theme: "colored"
+        });
+          
+        } catch (error:any) {
+          toast.error(error, {
+            position: toast.POSITION.TOP_RIGHT,
+            theme: "colored"
+          });
+        } 
+
+    } else {
+      toast.error('Preencha todos os campos', {
+        position: toast.POSITION.TOP_RIGHT,
+        theme: "colored"
+      });
     }
-    setSelected(newSelected);
-  };
+  }
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -320,11 +347,7 @@ export default function Users() {
     setPage(0);
   };
 
-  const isSelected = (id: number) => selected.indexOf(id) !== -1;
-
-  // Avoid a layout jump when reaching the last page with empty rows.
-  const emptyRows =
-    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
   if (rows.length <= 0 && !isEmpty) {
     return <BlankLayout>
@@ -398,8 +421,8 @@ export default function Users() {
                   <FormControl sx={{width: '100%'}} variant="outlined" size="small">
                     <Select size="small" style={{ height: '25px' }} value={filters.is_active} onChange={(event) => setFilters((values:any) => ({ ...values, is_active: event.target.value }))}>
                       <MenuItem value='all'>Todos</MenuItem>
-                      <MenuItem value={0}>Bloqueado</MenuItem>
-                      <MenuItem value={1}>Ativo</MenuItem>
+                      <MenuItem value={0}>Ativado</MenuItem>
+                      <MenuItem value={1}>Desativado</MenuItem>
                     </Select>
                   </FormControl> 
                 </TableCell>
@@ -423,7 +446,6 @@ export default function Users() {
     </Box>
   }
 
-
   return (
     <Box sx={{ width: '100%' }}>
       <Paper sx={{ width: '100%', mb: 2 }}>
@@ -441,7 +463,7 @@ export default function Users() {
               rowCount={rows.length}
             />
 
-<TableHead>
+        <TableHead>
           <TableRow>
             <TableCell align="center"> 
                 <TextField value={filters.user_id} inputProps={{ style: { height: "10px" } }} fullWidth size="small" onChange={(event) => setFilters((values:any) => ({ ...values, user_id: event.target.value }))}/>
@@ -481,8 +503,8 @@ export default function Users() {
               <FormControl sx={{width: '100%'}} variant="outlined" size="small">
                 <Select size="small" style={{ height: '25px' }} value={filters.is_active} onChange={(event) => setFilters((values:any) => ({ ...values, is_active: event.target.value }))}>
                   <MenuItem value='all'>Todos</MenuItem>
-                  <MenuItem value={0}>Bloqueado</MenuItem>
-                  <MenuItem value={1}>Ativo</MenuItem>
+                  <MenuItem value={0}>Ativado</MenuItem>
+                  <MenuItem value={1}>Desativado</MenuItem>
                 </Select>
               </FormControl> 
             </TableCell>
@@ -556,7 +578,9 @@ export default function Users() {
                         Inativo
                       </Box>
                     }</TableCell>
-                    <TableCell>{row.is_active}</TableCell>
+                    <TableCell>
+                    <Switch defaultChecked={row.is_active? false : true} onChange={(event) => { userLock(row.id, event.target.checked) }}/>
+                    </TableCell>
                     <TableCell>{row.created_at}</TableCell>
                     <TableCell>
                       <IconButton
@@ -578,6 +602,7 @@ export default function Users() {
                         onClose={() => setActions(null)}>
                           <MenuItem onClick={() => router.push(`/users/view/${id}`)}> Visualizar </MenuItem>
                           <MenuItem onClick={() => router.push(`/users/update/${id}`)}> Editar </MenuItem>
+                          <MenuItem onClick={() => { setOpen(true); setTransf((values:any) => ({ ...values, user_id: id })) }}> Transf </MenuItem>
                         </Menu>
                     </TableCell>
                   </TableRow>
@@ -605,6 +630,33 @@ export default function Users() {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Paper>
+        <ToastContainer />
+
+        <Modal open={open} sx={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+          <Paper sx={{ position: 'relative', minWidth: '50%', height: '50%', padding: '30px', margin: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY:'auto'}}> 
+
+            <Typography variant="h6"> Adicione ou retire valores nesse conta </Typography>
+
+            <Box sx={{ width: '100%', height: '90%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+
+              <Select size="small" value={transf.type} style={{ width: '70px', marginRight: 2 }} onChange={(event) => setTransf((values:any) => ({ ...values, type: event.target.value }))}>
+                <MenuItem value='sum'>+</MenuItem>
+                <MenuItem value='subtract'>-</MenuItem>
+              </Select>
+              <TextField value={transf.value} type="number" size="small" onChange={(event) => setTransf((values:any) => ({ ...values, value: event.target.value }))}/>
+              
+            </Box>
+
+            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+              <Box sx={{ cursor: 'pointer', backgroundColor: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient, width: 120, height: 30, borderRadius: '4px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginRight: 5 }} onClick={() => makeTransfer()}>
+                <Typography sx={{ textAlign: 'center', color: '#fff' }}> Enviar </Typography>
+              </Box>
+              <Box sx={{ cursor: 'pointer', backgroundColor: '#ff5d61', width: 120, height: 30, borderRadius: '4px', display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => setOpen(false)}>
+              <Typography sx={{ textAlign: 'center', color: '#fff' }}> Fechar </Typography>
+              </Box>
+            </Box>
+          </Paper>
+      </Modal>
     </Box>
   );
 }

@@ -120,3 +120,16 @@ export const respondWithdrawalRequest = async(res:any, token:string) => {
           console.error(error)
       }
 }
+
+export const requestWasRead = async(id:number, status:string, token:string) => {
+  const response:any = await axios.patch(
+    `${baseurl}/api/requests/was-read/${id}/${status}`, {},
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+    return response
+}
