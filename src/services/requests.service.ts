@@ -133,3 +133,16 @@ export const requestWasRead = async(id:number, status:string, token:string) => {
 
     return response
 }
+
+export const pendingRequests = async(token:string) => {
+  const response:any = await axios.get(
+    `${baseurl}/api/requests/pendencies`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+    return response
+}

@@ -291,21 +291,25 @@ export default function Users() {
   };
 
   const userLock = async(userID:number, status:boolean) => {
-    try {
+    const confirmed = window.confirm(`Você está a um passo de ${!status? 'desbloquear' : 'bloquear'} esse usuário, confirma?`);
+    if(confirmed){
+      try {
             
-      const response = await lockBotUser(`${userID}`, status? '0' : '1', token())
+        const response = await lockBotUser(`${userID}`, status? '0' : '1', token());
+        getUsers();
 
-      toast.success(response.data.message, {
-        position: toast.POSITION.TOP_RIGHT,
-        theme: "colored"
-      });
-        
-      } catch (error:any) {
-        toast.error(error, {
+        toast.success(response.data.message, {
           position: toast.POSITION.TOP_RIGHT,
           theme: "colored"
         });
-      } 
+          
+        } catch (error:any) {
+          toast.error(error, {
+            position: toast.POSITION.TOP_RIGHT,
+            theme: "colored"
+          });
+        } 
+    }
   };
 
   const makeTransfer = async() => {
@@ -579,7 +583,7 @@ export default function Users() {
                       </Box>
                     }</TableCell>
                     <TableCell>
-                    <Switch defaultChecked={row.is_active? false : true} onChange={(event) => { userLock(row.id, event.target.checked) }}/>
+                    <Switch checked={row.is_active? false : true} onChange={(event) => { userLock(row.id, event.target.checked) }}/>
                     </TableCell>
                     <TableCell>{row.created_at}</TableCell>
                     <TableCell>
