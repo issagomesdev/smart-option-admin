@@ -91,7 +91,7 @@ const HomePage = () => {
             return {
               name: total.name,
               total:  total.value,
-              md: 6,
+              md: 4,
               icon: <AccountCash sx={{ fontSize: 60, color: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient }}/>
             };
           })
