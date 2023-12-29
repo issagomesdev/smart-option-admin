@@ -299,7 +299,7 @@ export const Extract: React.FC<ExtractProps> = ({ userID, sx }) => {
                       <Select size="small" style={{ height: '25px' }} value={filters.origin} onChange={(event) => setFilters((values:any) => ({ ...values, origin: event.target.value }))}>
                       <MenuItem value='all'>Todos</MenuItem>
                       <MenuItem value='deposit'>Depósito</MenuItem>
-                      <MenuItem value='withdraw'>Saque</MenuItem>
+                      <MenuItem value='withdrawal'>Saque</MenuItem>
                       <MenuItem value='subscription'>Adesão</MenuItem>
                       <MenuItem value='tuition'>Mensalidade</MenuItem>
                       <MenuItem value='earnings'>Rentabilidade</MenuItem>
@@ -357,7 +357,7 @@ export const Extract: React.FC<ExtractProps> = ({ userID, sx }) => {
                       <Select size="small" style={{ height: '25px' }} value={filters.origin} onChange={(event) => setFilters((values:any) => ({ ...values, origin: event.target.value }))}>
                       <MenuItem value='all'>Todos</MenuItem>
                       <MenuItem value='deposit'>Depósito</MenuItem>
-                      <MenuItem value='withdraw'>Saque</MenuItem>
+                      <MenuItem value='withdrawal'>Saque</MenuItem>
                       <MenuItem value='subscription'>Adesão</MenuItem>
                       <MenuItem value='tuition'>Mensalidade</MenuItem>
                       <MenuItem value='earnings'>Rentabilidade</MenuItem>
@@ -391,7 +391,7 @@ export const Extract: React.FC<ExtractProps> = ({ userID, sx }) => {
                     
                     <TableCell>{row.id}</TableCell>
                     <TableCell>{row.type == 'sum'? '+' : '-'} {row.value}</TableCell>
-                    <TableCell>{row.origin == "deposit"? "Depósito" : row.origin == "withdraw"? "Saque" : row.origin == "subscription"? `${row.type == "sum"? `B.A.#${row.reference_id}` : 'Adesão'}` : row.origin == "tuition"? `${row.type == "sum"? `B.M.#${row.reference_id}` : 'Mensalidade'}` : row.origin == "earnings"? "Rentabilidade": row.origin == "profitability"? `B.R.#${row.reference_id}` : row.origin == "transf"? "Transf. entre contas" : row.origin == "admin"? "Transf. admin" : "Outros"}
+                    <TableCell>{row.origin == "deposit"? "Depósito" : row.origin == "withdrawal"? "Saque" : row.origin == "subscription"? `${row.type == "sum"? `B.A.#${row.reference_id}` : 'Adesão'}` : row.origin == "tuition"? `${row.type == "sum"? `B.M.#${row.reference_id}` : 'Mensalidade'}` : row.origin == "earnings"? "Rentabilidade": row.origin == "profitability"? `B.R.#${row.reference_id}` : row.origin == "transf"? "Transf. entre contas" : row.origin == "admin"? "Transf. admin" : "Outros"}
                     </TableCell>
                     <TableCell>{row.created_at}</TableCell>
                   </TableRow>
