@@ -78,8 +78,8 @@ import MailIcon from '@mui/icons-material/Mail';
       <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
         <Box sx={{ width: '90%', marginY: '1em' }}>
           <Grid container spacing={2} sx={{ height: '100%' }} columnSpacing={{ xs: 2 }}>
-          {requests.map((request:any) => {
-            return ( <Grid item xs={isSmallerThan809 ? 6 : 4} onClick={() => {setOpen(true); setRenderItem(request.id)}} sx={{cursor: 'pointer'}}>
+          {requests.map((request:any, index:any) => {
+            return ( <Grid key={index} item xs={isSmallerThan809 ? 6 : 4} onClick={() => {setOpen(true); setRenderItem(request.id)}} sx={{cursor: 'pointer'}}>
                <Badge badgeContent={request.pendings} color="primary" sx={{  width: '100%'}}>
                   <Paper sx={{  width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px' }}>
                     {request.icon}

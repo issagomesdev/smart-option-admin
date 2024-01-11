@@ -42,8 +42,8 @@ import FooterIllustrationsV1 from 'src/views/pages/auth/FooterIllustration'
 // ** Authentication Provider
 import { useAuth } from "src/providers/AuthContext"
 
-
 import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface Form {
   email: string,

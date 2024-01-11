@@ -5,7 +5,6 @@ import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableRow from '@mui/material/TableRow';
-import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import Link from '@mui/material/Link';
@@ -16,7 +15,7 @@ import DefaultPalette from "src/@core/theme/palette";
 import { PuffLoader } from 'react-spinners';
 import BlankLayout from "src/@core/layouts/BlankLayout";
 import { useRouter } from 'next/router';
-import {CartArrowDown, CashRegister, AccountNetwork, CashMinus, CashPlus, FaceAgent, CloseCircle }  from 'mdi-material-ui';
+import {CartArrowDown, CashRegister, AccountNetwork, CashMinus, CashPlus, FaceAgent }  from 'mdi-material-ui';
 import Grid from '@mui/material/Grid';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import Modal from '@mui/material/Modal';
@@ -208,7 +207,7 @@ const requests:Requests[] = [
         <Box sx={{ width: '100%',  marginY: '1em', flexGrow: 1 }}>
           <Grid container spacing={2} sx={{ height: '100%' }} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
           {requests.map((request, index) => {
-            return ( <Grid item xs={isSmallerThan809 ? 6 : 4} onClick={() => {setOpen(true); setRenderItem(request.id)}} sx={{cursor: 'pointer'}}>
+            return ( <Grid key={index} item xs={isSmallerThan809 ? 6 : 4} onClick={() => {setOpen(true); setRenderItem(request.id)}} sx={{cursor: 'pointer'}}>
               <Paper sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px' }}>
                 {request.icon}
               <Typography sx={{ textAlign: 'center' }}> {request.name} </Typography>

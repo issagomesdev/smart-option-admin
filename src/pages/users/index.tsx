@@ -272,7 +272,7 @@ export default function Users() {
     getUsers();
   }, [filters]);
 
-  let visibleRows = React.useMemo(
+  const visibleRows = React.useMemo(
     () =>
       stableSort(rows, getComparator(order, orderBy)).slice(
         page * rowsPerPage,

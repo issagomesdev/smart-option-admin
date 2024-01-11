@@ -38,7 +38,7 @@ import DefaultPalette from "src/@core/theme/palette";
 import Box from '@mui/material/Box'
 
 import LoginPage from "src/layouts/components/pages/login"
-// ** Extend App Props with Emotion
+
 type ExtendedAppProps = AppProps & {
   Component: NextPage
   emotionCache: EmotionCache

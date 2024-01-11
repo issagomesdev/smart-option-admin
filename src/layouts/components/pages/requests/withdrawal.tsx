@@ -34,6 +34,7 @@ import Modal from '@mui/material/Modal';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import TextField from '@mui/material/TextField'
 import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { FormControl, Select } from "@mui/material";
 
 interface Data {
