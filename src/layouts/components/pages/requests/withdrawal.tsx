@@ -40,9 +40,9 @@ import { FormControl, Select } from "@mui/material";
 interface Data {
   id: number,
   user_id: string,
-  pix_code: string,
   user: string,
   value: string,
+  erros: any,
   reference_id: string,
   reply: string,
   status: string,
@@ -209,16 +209,15 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
 
   useEffect(() => {   
     withdrawalRequests();
-    console.log('znno', rows)
   }, [filters]);
 
   const withdrawalRequests = () => {
     withdrawal(userID, token(), filters).then(data => {
       const res = data.data.map(function(data:any) {
-          return {id: data.id, user_id: data.user_id, user: data.name, pix_code: data.pix_code, value: data.value, reference_id: data.reference_id, reply: data.reply_observation, status: data.status, transaction_id: data.transaction_id, created_at: data.created_at };
+          return {id: data.id, user_id: data.user_id, user: data.name, value: data.value, reference_id: data.reference_id, reply: data.reply_observation, status: data.status, erros: data.errors_cause, transaction_id: data.transaction_id, created_at: data.created_at };
         });
         if(res.length <= 0) setIsEmpty(true);
-        else setRows(res), setIsEmpty(false);
+        else setIsEmpty(false), setRows(res);
       }).catch(error => console.error(error));
   }
 
@@ -235,11 +234,14 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
   respondWithdrawalRequest(res, token()).then(data => {
     setOpen(false);
     setObservation('');
-    withdrawalRequests();
+    
     toast.success('Solicitação respondida com sucesso!', {
       position: toast.POSITION.TOP_RIGHT,
       theme: "colored"
     });
+    
+    withdrawalRequests();
+    
   }).catch((error:any) => {
     toast.error(error || 'Erro desconhecido, tente novamente!', {
       position: toast.POSITION.TOP_RIGHT,
@@ -291,6 +293,7 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
 
   if (isEmpty) {
     return <Box sx={{ width: '100%' }}>
+        <ToastContainer/>
         <EnhancedTableToolbar/>
         <TableContainer sx={sx}>
           <Table
@@ -345,6 +348,7 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
 
   return (
     <Box sx={{ width: '100%' }}>
+        <ToastContainer/>
         <EnhancedTableToolbar/>
         <TableContainer sx={sx}>
           <Table
@@ -467,12 +471,11 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
             <TextField style={{ width: '100%'}} label="Observações" multiline rows={6}
             onChange={(event) => { setObservation(event.target.value)} }
             value={observation}/>
-            <Typography sx={{marginTop: '1em'}}> Chave Pix: {item.pix_code} </Typography>
             </Box> : <Box sx={{ width: '100%', height: '90%', marginBottom: 3 }}>
             <Typography> Situação: {item.status == "pending"? "Pendente" : item.status == "authorized"? "Autorizado" : item.status == "refused"? "Rejeitado" : item.status == "failed"? "Falhou" : item.status == "success"? "Concluído" : item.status } </Typography>
-            <Typography> Chave Pix: {item.pix_code} </Typography>
+            {item.erros? <Typography> Detalhes: {JSON.parse(item.erros).map((erro:any) => `${erro.description} `)} </Typography> : ''}
             <Typography sx={{ overflow: 'auto', height: '90%' }}> Observação: {item.reply? item.reply : "Nenhuma observação foi incluída na resposta à solicitação."} </Typography>
-            </Box>}     
+            </Box>  }     
             
            { item.status == "pending"? <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 2 }}>
               <Box sx={{ cursor: 'pointer', backgroundColor: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient, width: 120, height: 30, borderRadius: '4px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginRight: 5 }} onClick={() => respondRequest({id: item.id, res: true, observation: observation})}>
@@ -489,7 +492,6 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
                 <Typography sx={{ textAlign: 'center', color: '#fff' }}> Fechar </Typography>
               </Box>
             </Box> 
-        <ToastContainer />
           </Paper>
         </Modal>
     </Box>

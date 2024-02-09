@@ -324,6 +324,7 @@ export const Support: React.FC<ExtractProps> = ({ userID = null, sx }) => {
 
   if (isEmpty) {
     return  <Box sx={{ width: '100%', position: 'relative' }}>
+    <ToastContainer/>
     <EnhancedTableToolbar/>
     <TableContainer sx={sx}>
       <Table
@@ -375,12 +376,12 @@ export const Support: React.FC<ExtractProps> = ({ userID = null, sx }) => {
     <Box sx={{ width: '100%', marginY: '1em' }}>
       <Typography variant="subtitle1" sx={{textAlign: 'center'}}> Não há registros de solicitações de suporte no momento </Typography>
     </Box>
-
 </Box>
   }
 
   return (
     <Box sx={{ width: '100%', position: 'relative' }}>
+    <ToastContainer />
         <EnhancedTableToolbar/>
         <TableContainer sx={sx}>
           <Table
@@ -516,7 +517,6 @@ export const Support: React.FC<ExtractProps> = ({ userID = null, sx }) => {
             </Box>
           </Paper>
       </Modal>
-        <ToastContainer />
     </Box>
   );
 }

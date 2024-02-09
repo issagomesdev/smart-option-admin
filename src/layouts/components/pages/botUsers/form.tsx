@@ -16,7 +16,6 @@ const BotUsersForm = (userID:any = null) => {
     const [data, setData] = React.useState<any>({
         name: '',
         email: '',
-        cpf: '',
         password: '',
         phone_number: '',
         adress: '',
@@ -35,7 +34,6 @@ const BotUsersForm = (userID:any = null) => {
             id: user.data.id,
             name: user.data.name,
             email: user.data.email,
-            cpf: user.data.cpf,
             password: '',
             phone_number: user.data.phone_number,
             adress: user.data.adress,
@@ -85,10 +83,6 @@ const BotUsersForm = (userID:any = null) => {
       if (!data.email.trim()) {
         newErrors.email = 'Campo obrigatório';
       }  
-
-      if (!data.cpf.trim()) {
-        newErrors.cpf = 'Campo obrigatório';
-      } 
 
       if (!userID.userID && !data.password.trim()) {
         newErrors.password = 'Campo obrigatório';
@@ -141,20 +135,6 @@ const BotUsersForm = (userID:any = null) => {
                   }}
                 error={!!errors.email}
                 helperText={errors.email}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label='CPF'
-                value={data.cpf}
-                onChange={(event) => {
-                      setData((values: any) => ({ ...values, cpf: event.target.value }))
-                      validateForm();
-                  }}
-                error={!!errors.cpf}
-                helperText={errors.cpf}
               />
             </Grid>
 
