@@ -40,6 +40,7 @@ import { FormControl, Select } from "@mui/material";
 interface Data {
   id: number,
   user_id: string,
+  pix_code: string,
   user: string,
   value: string,
   reference_id: string,
@@ -208,12 +209,13 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
 
   useEffect(() => {   
     withdrawalRequests();
+    console.log('znno', rows)
   }, [filters]);
 
   const withdrawalRequests = () => {
     withdrawal(userID, token(), filters).then(data => {
       const res = data.data.map(function(data:any) {
-          return {id: data.id, user_id: data.user_id, user: data.name, value: data.value, reference_id: data.reference_id, reply: data.reply_observation, status: data.status, transaction_id: data.transaction_id, created_at: data.created_at };
+          return {id: data.id, user_id: data.user_id, user: data.name, pix_code: data.pix_code, value: data.value, reference_id: data.reference_id, reply: data.reply_observation, status: data.status, transaction_id: data.transaction_id, created_at: data.created_at };
         });
         if(res.length <= 0) setIsEmpty(true);
         else setRows(res), setIsEmpty(false);
@@ -321,6 +323,8 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
                       <MenuItem value='pending'>Pendente</MenuItem>
                       <MenuItem value='authorized'>Autorizado</MenuItem>
                       <MenuItem value='refused'>Rejeitado</MenuItem>
+                      <MenuItem value='success'>Concluído</MenuItem>
+                      <MenuItem value='failed'>Falhou</MenuItem>
                       </Select>
                     </FormControl> 
                 </TableCell>
@@ -373,6 +377,8 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
                       <MenuItem value='pending'>Pendente</MenuItem>
                       <MenuItem value='authorized'>Autorizado</MenuItem>
                       <MenuItem value='refused'>Rejeitado</MenuItem>
+                      <MenuItem value='success'>Concluído</MenuItem>
+                      <MenuItem value='failed'>Falhou</MenuItem>
                       </Select>
                     </FormControl> 
                 </TableCell>
@@ -406,7 +412,7 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
                       </Link>
                     </TableCell>
                     <TableCell>{row.value}</TableCell>
-                    <TableCell>{row.status == "pending"? "Pendente" : row.status == "authorized"? "Autorizado" : row.status == "refused"? "Rejeitado" : "Pendente"}</TableCell>
+                    <TableCell>{row.status == "pending"? "Pendente" : row.status == "authorized"? "Autorizado" : row.status == "refused"? "Rejeitado" : row.status == "failed"? "Falhou" : row.status == "success"? "Concluído" : row.status }</TableCell>
                     <TableCell>{row.created_at}</TableCell>
                     <TableCell>
                       <IconButton
@@ -457,14 +463,16 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
         <Modal open={open} sx={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center'}}>
           <Paper sx={{ position: 'relative', width: isSmallerThan ? '100%' : '40%', height: '60%', padding: '30px', margin: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY:'auto'}}>
 
-            { item.status == "pending"? <Box sx={{ width: '100%', height: '90%', marginBottom: 3, overflow: 'auto', display: 'flex', alignItems: 'center' }}>
+            { item.status == "pending"? <Box sx={{ width: '100%', height: '90%', marginBottom: 3, overflow: 'auto', display: 'flex', alignItems: 'flex-start', flexDirection: 'column' }}>
             <TextField style={{ width: '100%'}} label="Observações" multiline rows={6}
             onChange={(event) => { setObservation(event.target.value)} }
             value={observation}/>
+            <Typography sx={{marginTop: '1em'}}> Chave Pix: {item.pix_code} </Typography>
             </Box> : <Box sx={{ width: '100%', height: '90%', marginBottom: 3 }}>
-            <Typography> Situação: {item.status == "pending"? "Pendente" : item.status == "authorized"? "Autorizado" : item.status == "refused"? "Rejeitado" : "Pendente"} </Typography>
+            <Typography> Situação: {item.status == "pending"? "Pendente" : item.status == "authorized"? "Autorizado" : item.status == "refused"? "Rejeitado" : item.status == "failed"? "Falhou" : item.status == "success"? "Concluído" : item.status } </Typography>
+            <Typography> Chave Pix: {item.pix_code} </Typography>
             <Typography sx={{ overflow: 'auto', height: '90%' }}> Observação: {item.reply? item.reply : "Nenhuma observação foi incluída na resposta à solicitação."} </Typography>
-            </Box>}       
+            </Box>}     
             
            { item.status == "pending"? <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 2 }}>
               <Box sx={{ cursor: 'pointer', backgroundColor: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient, width: 120, height: 30, borderRadius: '4px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginRight: 5 }} onClick={() => respondRequest({id: item.id, res: true, observation: observation})}>
