@@ -117,6 +117,19 @@ export const upBotUser = async(body:any, token:string) => {
     return response
 }
 
+export const deleteBotUser = async(id:number, token:string) => {
+  const response:any = await axios.delete(
+    `${baseurl}/api/users/user-bot/${id}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+    return response
+}
+
 export const lockBotUser = async(userID:string, status:string, token:string) => {
   const response:any = await axios.put(
     `${baseurl}/api/users/user-bot/${userID}/${status}`, {},

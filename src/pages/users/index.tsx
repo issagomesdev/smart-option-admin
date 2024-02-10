@@ -21,7 +21,7 @@ import Switch from '@mui/material/Switch';
 import Link from '@mui/material/Link';
 import { PlusOne } from '@mui/icons-material';
 import { visuallyHidden } from '@mui/utils';
-import { botUsersWithFilter, lockBotUser, transfUserAdmin } from "src/services/users.service";
+import { botUsersWithFilter, lockBotUser, transfUserAdmin, deleteBotUser } from "src/services/users.service";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useEffect } from 'react';
@@ -267,6 +267,24 @@ export default function Users() {
   
     }).catch(error => console.error(error));
   }
+
+  const deleteUser = async () => {
+    try {
+      const response = await deleteBotUser(id, token()) 
+      toast.success(response.data.message, {
+        position: toast.POSITION.TOP_RIGHT,
+        theme: "colored"
+      });
+
+      getUsers();
+        
+      } catch (error:any) {
+        toast.error(error.response.data.errors[0].message, {
+          position: toast.POSITION.TOP_RIGHT,
+          theme: "colored"
+        });
+      } 
+  };
 
   useEffect(() => {
     getUsers();
@@ -606,6 +624,7 @@ export default function Users() {
                         onClose={() => setActions(null)}>
                           <MenuItem onClick={() => router.push(`/users/view/${id}`)}> Visualizar </MenuItem>
                           <MenuItem onClick={() => router.push(`/users/update/${id}`)}> Editar </MenuItem>
+                          <MenuItem onClick={() => deleteUser()}> Exluir </MenuItem>
                           <MenuItem onClick={() => { setOpen(true); setTransf((values:any) => ({ ...values, user_id: id })) }}> Transf </MenuItem>
                         </Menu>
                     </TableCell>
