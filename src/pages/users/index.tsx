@@ -269,22 +269,25 @@ export default function Users() {
   }
 
   const deleteUser = async () => {
-    try {
-      const response = await deleteBotUser(id, token()) 
-      toast.success(response.data.message, {
-        position: toast.POSITION.TOP_RIGHT,
-        theme: "colored"
-      });
-
-      getUsers();
-      setActions(null)
-        
-      } catch (error:any) {
-        toast.error(error.response.data.errors[0].message, {
+    const confirmed = window.confirm(`Você está a um passo de excluir esse usuário, confirma?`);
+    if(confirmed){
+      try {
+        const response = await deleteBotUser(id, token()) 
+        toast.success(response.data.message, {
           position: toast.POSITION.TOP_RIGHT,
           theme: "colored"
         });
-      } 
+  
+        getUsers();
+        setActions(null)
+          
+        } catch (error:any) {
+          toast.error(error.response.data.errors[0].message, {
+            position: toast.POSITION.TOP_RIGHT,
+            theme: "colored"
+          });
+        } 
+    }
   };
 
   useEffect(() => {
