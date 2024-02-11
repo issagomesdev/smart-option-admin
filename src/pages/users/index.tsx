@@ -628,7 +628,7 @@ export default function Users() {
                         onClose={() => setActions(null)}>
                           <MenuItem onClick={() => router.push(`/users/view/${id}`)}> Visualizar </MenuItem>
                           <MenuItem onClick={() => router.push(`/users/update/${id}`)}> Editar </MenuItem>
-                          <MenuItem onClick={() => deleteUser()}> Exluir </MenuItem>
+                          <MenuItem onClick={() => deleteUser()}> Excluir </MenuItem>
                           <MenuItem onClick={() => { setOpen(true); setTransf((values:any) => ({ ...values, user_id: id })) }}> Transf </MenuItem>
                         </Menu>
                     </TableCell>
