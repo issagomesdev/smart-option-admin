@@ -35,3 +35,20 @@ export const balance = async(token:string, param:any) => {
           console.error(error)
       }
 }
+
+export const plans = async(token:string) => {
+  try {
+      const response:any = await axios.get(
+        `${baseurl}/api/dashboard/plans`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+        return response
+      } catch (error:any) {
+          console.error(error)
+      }
+}

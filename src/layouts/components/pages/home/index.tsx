@@ -4,7 +4,7 @@ import ApexChartWrapper from 'src/@core/styles/libs/react-apexcharts'
 import { Box, Paper, Typography, Select, MenuItem, InputLabel, FormControl, TextField, Modal, useMediaQuery, useTheme } from "@mui/material"
 import { useAuth } from "src/providers/AuthContext";
 import { users, balance } from "src/services/dashboard.service";
-import { AccountMultiple, AccountMultipleCheck, Medal, RadioboxBlank, CheckCircle, AccountCash }  from 'mdi-material-ui';
+import { AccountMultiple, AccountMultipleCheck, Medal, RadioboxBlank, CheckCircle, AccountCash, DiamondStone }  from 'mdi-material-ui';
 import { useEffect } from 'react';
 import BlankLayout from "src/@core/layouts/BlankLayout";
 import { PuffLoader } from "react-spinners";
@@ -57,23 +57,31 @@ const HomePage = () => {
         id: 3,
         name: 'Total de Usuários Bronze',
         total:  data.data.bronzeUsers,
-        md: 4,
+        md: 3,
         icon: <Medal sx={{ fontSize: 60, color: "#795548" }}/>
       },
       {
         id: 4,
         name: 'Total de Usuários Prata',
         total:  data.data.silverUsers,
-        md: 4,
+        md: 3,
         icon: <Medal sx={{ fontSize: 60, color: "#607d8b"  }}/>
       },
       {
         id: 5,
         name: 'Total de Usuários Ouro',
         total:  data.data.goldUsers,
-        md: 4,
+        md: 3,
         icon: <Medal sx={{ fontSize: 60, color: "#ffd24b"  }}/>
-      }])
+      },
+      {
+        id: 5,
+        name: 'Total de Usuários Diamante',
+        total:  data.data.diamondUsers,
+        md: 3,
+        icon: <DiamondStone sx={{ fontSize: 60, color: "#C6A7FE"  }}/>
+      }
+    ])
     }).catch((error:any) => console.error(error));
 
     botUsers(token(), searchUser).then((data:any) => {
@@ -170,6 +178,7 @@ const HomePage = () => {
                 <MenuItem value={1}>Smart Bronze</MenuItem>
                 <MenuItem value={2}>Smart Silver</MenuItem>
                 <MenuItem value={3}>Smart Gold</MenuItem>
+                <MenuItem value={4}>Smart Diamond</MenuItem>
                 </Select>
               </FormControl> 
             </Grid>

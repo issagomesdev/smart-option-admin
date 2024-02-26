@@ -50,7 +50,7 @@ interface Data {
   actions: string
 }
 
-type Plans = 'bronze' | 'silver' | 'gold' | 'without';
+type Plans = 'bronze' | 'silver' | 'gold' | 'diamond' | 'without';
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -425,6 +425,7 @@ export default function Users() {
                       <MenuItem value={1}>Bronze</MenuItem>
                       <MenuItem value={2}>Silver</MenuItem>
                       <MenuItem value={3}>Gold</MenuItem>
+                      <MenuItem value={4}>Diamond</MenuItem>
                       </Select>
                     </FormControl> 
                 </TableCell>
@@ -507,6 +508,7 @@ export default function Users() {
                   <MenuItem value={1}>Bronze</MenuItem>
                   <MenuItem value={2}>Silver</MenuItem>
                   <MenuItem value={3}>Gold</MenuItem>
+                  <MenuItem value={4}>Diamond</MenuItem>
                   </Select>
                 </FormControl> 
             </TableCell>

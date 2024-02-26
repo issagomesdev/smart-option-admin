@@ -1,10 +1,11 @@
 import * as React from 'react';
 import { Box, Paper, Typography } from '@mui/material'
 import Grid from '@mui/material/Grid'
-import TextField from '@mui/material/TextField'
+import { TextField, FormControl, InputLabel, Select, MenuItem } from '@mui/material'
 import CardContent from '@mui/material/CardContent'
 import Button from '@mui/material/Button'
 import { ToastContainer, toast } from 'react-toastify';
+import { plans } from "src/services/dashboard.service";
 import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from "src/providers/AuthContext"
 import { newBotUser, upBotUser, botUser } from "src/services/users.service";
@@ -19,9 +20,13 @@ const BotUsersForm = (userID:any = null) => {
         password: '',
         phone_number: '',
         adress: '',
-        pix_code: ''
+        pix_code: '',
+        product_id: '',
+        balance: '',
+        type: '',
     });
     const [errors, setErrors] = React.useState<any>({});
+    const [list_plans, setListPlans] = React.useState<any>([]);
     const { token } = useAuth();
     const router = useRouter();
 
@@ -37,7 +42,8 @@ const BotUsersForm = (userID:any = null) => {
             password: '',
             phone_number: user.data.phone_number,
             adress: user.data.adress,
-            pix_code: user.data.pix_code
+            pix_code: user.data.pix_code,
+            product_id: user.data.product_id?? ''
         });
       }).catch((error:any) => {
         toast.error(error, {
@@ -46,6 +52,10 @@ const BotUsersForm = (userID:any = null) => {
         });
       });
       }
+
+      plans(token()).then((data:any) => {
+        setListPlans(data.data);
+      }).catch((error:any) => console.error(error));
   
     }, []);
 
@@ -193,6 +203,47 @@ const BotUsersForm = (userID:any = null) => {
                 helperText={errors.pix_code}
               />
             </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <FormControl sx={{width: '100%'}}>
+                  <InputLabel id="set-product-label">Atribuir Plano</InputLabel>
+                  <Select fullWidth
+                    onChange={(event) => {
+                    setData((values: any) => ({ ...values, product_id: event.target.value }))
+                    validateForm();
+                  }}
+                value={data.product_id}
+                labelId="set-product-label"
+                id="set-product"
+                label="Atribuir Plano">
+                  <MenuItem value={0}>Nenhum</MenuItem>
+                  {list_plans.map((plan:any, index:any) => {
+                    return <MenuItem value={plan.id}>{plan.name.charAt(0).toUpperCase() + plan.name.slice(1)}</MenuItem>
+                  })}
+                  </Select>
+                </FormControl> 
+            </Grid>
+
+            {userID && !userID.userID? <Grid item xs={12} sm={6}>
+              <Select sx={{width: '15%', marginRight: 2}} onChange={(event) => setData((values: any) => ({ ...values, type: event.target.value }))} value={data.type}>
+                <MenuItem value='sum'>+</MenuItem>
+                <MenuItem value='subtract'>-</MenuItem>
+              </Select>
+              <TextField sx={{width: '80%'}}
+                label='Debitar Saldo Inicial'
+                value={data.balance}
+                onChange={(event) => {
+                  setData((values: any) => ({ ...values, balance: event.target.value }))
+                  validateForm();
+                }}
+                type="number"
+                inputProps={{
+                  step: '0.01', 
+                  min: '0',
+                  max: '99999.99' 
+                }}
+/>
+            </Grid> : ''}
 
             <Grid item xs={12}>
               <Button variant='contained' sx={{ marginRight: 3.5 }} onClick={() => submit()}>

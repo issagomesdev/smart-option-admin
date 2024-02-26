@@ -32,6 +32,7 @@ const DefaultPalette = (mode: PaletteMode, themeColor: ThemeColor) => {
       bronze: '#cd7f32',
       silver: '#999999',
       gold: '#ffd452',
+      diamond: '#a16cff',
       without: '#9b6b68'
     },
     common: {

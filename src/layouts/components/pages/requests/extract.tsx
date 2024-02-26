@@ -309,6 +309,7 @@ export const Extract: React.FC<ExtractProps> = ({ userID, sx }) => {
                       <MenuItem value='B.M'>Bônus de Mensalidade</MenuItem>
                       <MenuItem value='transfer'>Transf. entre contas</MenuItem>
                       <MenuItem value='admin'>Transf. ADM</MenuItem>
+                      <MenuItem value='diamond_tax'>Taxa Diamante</MenuItem>
                       </Select>
                     </FormControl> 
                 </TableCell>
@@ -366,6 +367,7 @@ export const Extract: React.FC<ExtractProps> = ({ userID, sx }) => {
                       <MenuItem value='B.M'>Bônus de Mensalidade</MenuItem>
                       <MenuItem value='transfer'>Transf. entre contas</MenuItem>
                       <MenuItem value='admin'>Transf. ADM</MenuItem>
+                      <MenuItem value='diamond_tax'>Taxa Diamante</MenuItem>
                       </Select>
                     </FormControl> 
                 </TableCell>
@@ -391,7 +393,7 @@ export const Extract: React.FC<ExtractProps> = ({ userID, sx }) => {
                     
                     <TableCell>{row.id}</TableCell>
                     <TableCell>{row.type == 'sum'? '+' : '-'} {row.value}</TableCell>
-                    <TableCell>{row.origin == "deposit"? "Depósito" : row.origin == "withdrawal"? "Saque" : row.origin == "subscription"? `${row.type == "sum"? `B.A.#${row.reference_id}` : 'Adesão'}` : row.origin == "tuition"? `${row.type == "sum"? `B.M.#${row.reference_id}` : 'Mensalidade'}` : row.origin == "earnings"? "Rentabilidade": row.origin == "profitability"? `B.R.#${row.reference_id}` : row.origin == "transf"? "Transf. entre contas" : row.origin == "admin"? "Transf. ADM" : "Outros"}
+                    <TableCell>{row.origin == "deposit"? "Depósito" : row.origin == "withdrawal"? "Saque" : row.origin == "subscription"? `${row.type == "sum"? `B.A.#${row.reference_id}` : 'Adesão'}` : row.origin == "tuition"? `${row.type == "sum"? `B.M.#${row.reference_id}` : 'Mensalidade'}` : row.origin == "earnings"? "Rentabilidade": row.origin == "profitability"? `B.R.#${row.reference_id}` : row.origin == "transf"? "Transf. entre contas" : row.origin == "admin"? "Transf. ADM" : row.origin == "diamond_tax"? "Taxa Diamante" : "Outros"}
                     </TableCell>
                     <TableCell>{row.created_at}</TableCell>
                   </TableRow>
