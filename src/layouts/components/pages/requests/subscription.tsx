@@ -31,7 +31,9 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { useRouter } from 'next/router';
 import { useAuth } from "src/providers/AuthContext";
+import { products, Plans } from 'src/services/products.service';
 import { TextField, Select, FormControl } from "@mui/material";
+import { plans } from "src/services/dashboard.service";
 
 interface Data {
   id: number,
@@ -45,8 +47,6 @@ interface Data {
   transaction_id: string,
   created_at: string,
 }
-
-type Plans = 'bronze' | 'silver' | 'gold' | 'without';
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -199,6 +199,7 @@ export const Subscription: React.FC<ExtractProps> = ({ userID = null, sx }) => {
   const [isEmpty, setIsEmpty] = React.useState<boolean>(false); 
   const [filters, setFilters] = React.useState<any>({ id: '', name: '', product_id: 'all', value: '', status: 'all', created_at: '' });
   const [id, setId] = React.useState<any>({}); 
+  const [list_plans, setListPlans] = React.useState<any>([]);
   const router = useRouter();
   const { token } = useAuth();
 
@@ -217,7 +218,11 @@ export const Subscription: React.FC<ExtractProps> = ({ userID = null, sx }) => {
 
   }, [filters]);
 
-  
+  useEffect(() => {
+    plans(token()).then((data:any) => {
+      setListPlans(data.data);
+    }).catch((error:any) => console.error(error));
+  }, []);
 
   let visibleRows = React.useMemo(
     () =>
@@ -325,9 +330,9 @@ export const Subscription: React.FC<ExtractProps> = ({ userID = null, sx }) => {
           <FormControl sx={{width: '100%'}} variant="outlined" size="small">
               <Select size="small" style={{ height: '25px' }} value={filters.product_id} onChange={(event) => setFilters((values:any) => ({ ...values, product_id: event.target.value }))}>
               <MenuItem value='all'>Todos</MenuItem>
-              <MenuItem value={1}>Bronze</MenuItem>
-              <MenuItem value={2}>Silver</MenuItem>
-              <MenuItem value={3}>Gold</MenuItem>
+              {list_plans.map((plan:any) => {
+                return <MenuItem value={plan.id}>{products[plan.name]}</MenuItem>
+              })}
               </Select>
             </FormControl> 
         </TableCell>
@@ -390,9 +395,9 @@ export const Subscription: React.FC<ExtractProps> = ({ userID = null, sx }) => {
               <FormControl sx={{width: '100%'}} variant="outlined" size="small">
                   <Select size="small" style={{ height: '25px' }} value={filters.product_id} onChange={(event) => setFilters((values:any) => ({ ...values, product_id: event.target.value }))}>
                   <MenuItem value='all'>Todos</MenuItem>
-                  <MenuItem value={1}>Bronze</MenuItem>
-                  <MenuItem value={2}>Silver</MenuItem>
-                  <MenuItem value={3}>Gold</MenuItem>
+                  {list_plans.map((plan:any) => {
+                    return <MenuItem value={plan.id}>{products[plan.name]}</MenuItem>
+                  })}
                   </Select>
                 </FormControl> 
             </TableCell>
@@ -448,7 +453,7 @@ export const Subscription: React.FC<ExtractProps> = ({ userID = null, sx }) => {
                     textAlign="center"
                     width={100}
                     color="white">
-                      {row.product}
+                      {products[row.product]}
                     </Box>
                   </TableCell>
                     <TableCell>{row.value}</TableCell>

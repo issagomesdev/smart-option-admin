@@ -26,8 +26,7 @@ import { Deposit } from "src/layouts/components/pages/requests/deposit";
 import { Subscription } from "src/layouts/components/pages/requests/subscription";
 import { Support } from "src/layouts/components/pages/requests/support";
 import { useAuth } from "src/providers/AuthContext"
-
-type Plans = 'bronze' | 'silver' | 'gold' | 'without';
+import { products, Plans } from 'src/services/products.service';
 
 interface Requests {
   id: number;
@@ -142,14 +141,14 @@ const requests:Requests[] = [
                     textAlign="center"
                     width={100}
                     color="white">
-                      {data.plan == 'without'? 'nenhum' : data.plan}
+                      {data.plan == 'without'? 'nenhum' : products[data.plan]}
                     </Box>
                   </TableCell>
                 </TableRow>
                 <TableRow> 
                   <TableCell> <Box sx={{ fontWeight: 'bold', m: 1 }}>Telegram</Box> </TableCell>
                   <TableCell> 
-                    {data.telegram == 'off'? 
+                    {!data.telegram || data.telegram == 'off'? 
                         <Box
                         bgcolor={DefaultPalette(themeConfig.mode, 'primary').error.dark}
                         borderRadius={16}

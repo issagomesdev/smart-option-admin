@@ -11,6 +11,7 @@ import { useAuth } from "src/providers/AuthContext"
 import { newBotUser, upBotUser, botUser } from "src/services/users.service";
 import { useEffect } from "react";
 import { useRouter } from 'next/router';
+import { products } from 'src/services/products.service';
 
 const BotUsersForm = (userID:any = null) => {
     
@@ -217,8 +218,8 @@ const BotUsersForm = (userID:any = null) => {
                 id="set-product"
                 label="Atribuir Plano">
                   <MenuItem value={0}>Nenhum</MenuItem>
-                  {list_plans.map((plan:any, index:any) => {
-                    return <MenuItem value={plan.id}>{plan.name.charAt(0).toUpperCase() + plan.name.slice(1)}</MenuItem>
+                  {list_plans.map((plan:any) => {
+                    return <MenuItem value={plan.id}>{products[plan.name]}</MenuItem>
                   })}
                   </Select>
                 </FormControl> 

@@ -13,7 +13,9 @@ import themeConfig from "src/configs/themeConfig";
 import { botUsers } from "src/services/users.service";
 import 'react-date-range/dist/styles.css'; 
 import 'react-date-range/dist/theme/default.css';
+import { plans } from "src/services/dashboard.service";
 import { DateRange } from 'react-date-range';
+import { products } from 'src/services/products.service';
 
 const HomePage = () => {
   
@@ -34,6 +36,7 @@ const HomePage = () => {
   const [ searchUser, setSearchUser] = React.useState<string>('');
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
+  const [list_plans, setListPlans] = React.useState<any>([]);
 
 
   useEffect(() => {
@@ -86,6 +89,10 @@ const HomePage = () => {
 
     botUsers(token(), searchUser).then((data:any) => {
       setUsers_list(data.data);
+    }).catch((error:any) => console.error(error));
+
+    plans(token()).then((data:any) => {
+      setListPlans(data.data);
     }).catch((error:any) => console.error(error));
     
   }, []);
@@ -175,10 +182,9 @@ const HomePage = () => {
               id="filter-for-product"
               label="Filtrar por Plano">
                 <MenuItem value='all'>Todos</MenuItem>
-                <MenuItem value={1}>Smart Bronze</MenuItem>
-                <MenuItem value={2}>Smart Silver</MenuItem>
-                <MenuItem value={3}>Smart Gold</MenuItem>
-                <MenuItem value={4}>Smart Diamond</MenuItem>
+                {list_plans.map((plan:any) => {
+                    return <MenuItem value={plan.id}>{products[plan.name]}</MenuItem>
+                  })}
                 </Select>
               </FormControl> 
             </Grid>

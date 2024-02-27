@@ -36,6 +36,8 @@ import { useRouter } from 'next/router';
 import { useAuth } from "src/providers/AuthContext";
 import { Select, FormControl, InputLabel, FormControlLabel } from "@mui/material";
 import { BottleSoda } from "mdi-material-ui";
+import { products, Plans } from 'src/services/products.service';
+import { plans } from "src/services/dashboard.service";
 
 interface Data {
   id: number,
@@ -49,8 +51,6 @@ interface Data {
   created_at: string,
   actions: string
 }
-
-type Plans = 'bronze' | 'silver' | 'gold' | 'diamond' | 'without';
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -253,6 +253,7 @@ export default function Users() {
   const [filters, setFilters] = React.useState<any>({ user_id: '', name: '', email: '', product_id: 'all', telegram: '', balance: '', status: 'all', is_active: 'all', created_at: '' });
   const [transf, setTransf] = React.useState<any>({ user_id: '', value: '', type: '' });
   const [id, setId] = React.useState<any>({}); 
+  const [list_plans, setListPlans] = React.useState<any>([]);
   const router = useRouter();
   const { token } = useAuth();
 
@@ -289,6 +290,12 @@ export default function Users() {
         } 
     }
   };
+
+  useEffect(() => {
+    plans(token()).then((data:any) => {
+      setListPlans(data.data);
+    }).catch((error:any) => console.error(error));
+  }, []);
 
   useEffect(() => {
     getUsers();
@@ -422,10 +429,9 @@ export default function Users() {
                   <FormControl sx={{width: '100%'}} variant="outlined" size="small">
                       <Select size="small" style={{ height: '25px' }} value={filters.product_id} onChange={(event) => setFilters((values:any) => ({ ...values, product_id: event.target.value }))}>
                       <MenuItem value='all'>Todos</MenuItem>
-                      <MenuItem value={1}>Bronze</MenuItem>
-                      <MenuItem value={2}>Silver</MenuItem>
-                      <MenuItem value={3}>Gold</MenuItem>
-                      <MenuItem value={4}>Diamond</MenuItem>
+                      {list_plans.map((plan:any) => {
+                        return <MenuItem value={plan.id}>{products[plan.name]}</MenuItem>
+                      })}
                       </Select>
                     </FormControl> 
                 </TableCell>
@@ -505,10 +511,9 @@ export default function Users() {
               <FormControl sx={{width: '100%'}} variant="outlined" size="small">
                   <Select size="small" style={{ height: '25px' }} value={filters.product_id} onChange={(event) => setFilters((values:any) => ({ ...values, product_id: event.target.value }))}>
                   <MenuItem value='all'>Todos</MenuItem>
-                  <MenuItem value={1}>Bronze</MenuItem>
-                  <MenuItem value={2}>Silver</MenuItem>
-                  <MenuItem value={3}>Gold</MenuItem>
-                  <MenuItem value={4}>Diamond</MenuItem>
+                  {list_plans.map((plan:any) => {
+                    return <MenuItem value={plan.id}>{products[plan.name]}</MenuItem>
+                  })}
                   </Select>
                 </FormControl> 
             </TableCell>
@@ -565,10 +570,10 @@ export default function Users() {
                       borderRadius={16}
                       textAlign="center"
                       color="white">
-                        {row.plan == 'without'? 'nenhum' : row.plan}
+                        {row.plan == 'without'? 'nenhum' : products[row.plan]}
                       </Box>
                     </TableCell>
-                    <TableCell>{row.telegram == 'off'? 
+                    <TableCell>{!row.telegram || row.telegram == 'off'? 
                       <Box
                       bgcolor={DefaultPalette(themeConfig.mode, 'primary').error.dark}
                       borderRadius={16}
