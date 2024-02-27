@@ -429,8 +429,8 @@ export default function Users() {
                   <FormControl sx={{width: '100%'}} variant="outlined" size="small">
                       <Select size="small" style={{ height: '25px' }} value={filters.product_id} onChange={(event) => setFilters((values:any) => ({ ...values, product_id: event.target.value }))}>
                       <MenuItem value='all'>Todos</MenuItem>
-                      {list_plans.map((plan:any) => {
-                        return <MenuItem value={plan.id}>{products[plan.name]}</MenuItem>
+                      {list_plans.map((plan:any, index:any) => {
+                        return <MenuItem key={index} value={plan.id}>{products[plan.name]}</MenuItem>
                       })}
                       </Select>
                     </FormControl> 
@@ -511,8 +511,8 @@ export default function Users() {
               <FormControl sx={{width: '100%'}} variant="outlined" size="small">
                   <Select size="small" style={{ height: '25px' }} value={filters.product_id} onChange={(event) => setFilters((values:any) => ({ ...values, product_id: event.target.value }))}>
                   <MenuItem value='all'>Todos</MenuItem>
-                  {list_plans.map((plan:any) => {
-                    return <MenuItem value={plan.id}>{products[plan.name]}</MenuItem>
+                  {list_plans.map((plan:any, index:any) => {
+                    return <MenuItem key={index} value={plan.id}>{products[plan.name]}</MenuItem>
                   })}
                   </Select>
                 </FormControl> 
