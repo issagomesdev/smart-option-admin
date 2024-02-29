@@ -24,7 +24,7 @@ import { withdrawal, respondWithdrawalRequest } from "src/services/requests.serv
 import { useEffect } from 'react';
 import themeConfig from "src/configs/themeConfig";
 import DefaultPalette from "src/@core/theme/palette";
-import { PuffLoader } from 'react-spinners';
+import { PuffLoader, BeatLoader } from 'react-spinners';
 import BlankLayout from "src/@core/layouts/BlankLayout";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Menu from '@mui/material/Menu';
@@ -204,7 +204,9 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
   const [open, setOpen] = React.useState(false);
   const [filters, setFilters] = React.useState<any>({ id: '', name: '', value: '', status: 'all', created_at: '' });
   const [observation, setObservation] = React.useState<string>('');
+  const [loadingWithdrawalRequest, setLoadingWithdrawalRequest] = React.useState(false);
   const { token } = useAuth();
+
   const isSmallerThan = useMediaQuery('(max-width:830px)');
 
   useEffect(() => {   
@@ -230,24 +232,39 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
     [order, rows, orderBy, page, rowsPerPage],
   );
 
-  const respondRequest = (res:any) => {
-  respondWithdrawalRequest(res, token()).then(data => {
-    setOpen(false);
-    setObservation('');
-    
-    toast.success('Solicitação respondida com sucesso!', {
-      position: toast.POSITION.TOP_RIGHT,
-      theme: "colored"
-    });
-    
-    withdrawalRequests();
-    
-  }).catch((error:any) => {
-    toast.error(error || 'Erro desconhecido, tente novamente!', {
-      position: toast.POSITION.TOP_RIGHT,
-      theme: "colored"
-    });
-  });
+  const respondRequest = async(res:any) => {
+
+    setLoadingWithdrawalRequest(true);
+
+    try {
+
+      const response:any = await respondWithdrawalRequest(res, token());
+      console.log(response)
+      if(response.data.status) {
+        toast.success(response.data.message, {
+          position: toast.POSITION.TOP_RIGHT,
+          theme: "colored"
+        });
+      } else {
+        toast.error(response.data.message, {
+          position: toast.POSITION.TOP_RIGHT,
+          theme: "colored"
+        });
+      }
+
+      withdrawalRequests();
+
+    } catch(error) {
+      toast.error(error, {
+        position: toast.POSITION.TOP_RIGHT,
+        theme: "colored"
+      });
+    }
+
+      setLoadingWithdrawalRequest(false);
+      setOpen(false);
+      setObservation('');
+
   }
 
   const handleRequestSort = (
@@ -349,6 +366,7 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
   return (
     <Box sx={{ width: '100%' }}>
         <ToastContainer/>
+
         <EnhancedTableToolbar/>
         <TableContainer sx={sx}>
           <Table
@@ -465,7 +483,21 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
         />
 
         <Modal open={open} sx={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center'}}>
+          
           <Paper sx={{ position: 'relative', width: isSmallerThan ? '100%' : '40%', height: '60%', padding: '30px', margin: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY:'auto'}}>
+
+            { loadingWithdrawalRequest? <Box sx={{position: 'absolute', top: '60%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', }}>
+              <BeatLoader
+                size={15}
+                color={DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient}
+                cssOverride={{
+                  display: "block",
+                  margin: "1",
+                  borderColor: DefaultPalette(themeConfig.mode, 'primary').customColors.primaryGradient,
+                }}
+                speedMultiplier={0.8}
+              />
+            </Box> : ''  }
 
             { item.status == "pending"? <Box sx={{ width: '100%', height: '90%', marginBottom: 3, overflow: 'auto', display: 'flex', alignItems: 'flex-start', flexDirection: 'column' }}>
             <TextField style={{ width: '100%'}} label="Observações" multiline rows={6}
