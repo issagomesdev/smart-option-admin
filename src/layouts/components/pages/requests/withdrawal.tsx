@@ -255,7 +255,7 @@ export const Withdrawal: React.FC<ExtractProps> = ({ userID = null, sx }) => {
       withdrawalRequests();
 
     } catch(error) {
-      toast.error(error, {
+      toast.error(`Erro: ${JSON.stringify(error)}`, {
         position: toast.POSITION.TOP_RIGHT,
         theme: "colored"
       });
