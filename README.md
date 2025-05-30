@@ -39,15 +39,14 @@ The main Telegram Bot repository is available at [Smart Option Telegram Bot](htt
 
 <h2 id="features">✨ Features</h2>
 
-- Secure user authentication with JWT and session management  
-- Dashboard with real-time metrics on users, transactions, and balances  
-- User management: view, edit, delete, and transfer balances  
-- Detailed transaction and withdrawal request tracking  
-- Affiliate network visualization with multi-level hierarchy  
-- Filterable and paginated lists for users and financial operations  
-- Responsive and intuitive UI built with Material UI components  
-- Integration with the backend API for data synchronization  
-- Support ticket management and user communication tools  
+- Display real-time metrics on users, transactions, and balances  
+- Manage users: view, edit, delete, and transfer balances  
+- Track transactions and withdrawal requests in detail  
+- Visualize affiliate network with multi-level hierarchy  
+- Filter and paginate user and transaction data  
+- Offer a responsive UI built with Material UI  
+- Integrate with backend API for real-time data sync  
+- Manage support tickets and user communications
 
 <h2 id="technologies">🛠️ Technologies</h2>
 
@@ -210,7 +209,7 @@ npm install
 # or
 yarn install
 
-# Create a .env.local file based on .env.example, and set your API URL:
+# Create a .env.local file based on .env.copy, and set your API URL:
 # NEXT_PUBLIC_BASE_URL=https://your-backend-api.com
 
 # run in development mode
