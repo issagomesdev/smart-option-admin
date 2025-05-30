@@ -35,7 +35,7 @@ This panel connects via RESTful API to the backend Node.js services powering the
 
 This panel works seamlessly with the backend API that powers the Telegram bot, providing a powerful interface to control and analyze platform activity.
 
-The main Telegram Bot repository is available at [Smart Option Telegram Bot](https://github.com/issagomesdev/smart-option).
+The main Telegram Bot repository is available at [Smart Option — Telegram finance Bot](https://github.com/issagomesdev/smart-option).
 
 <h2 id="features">✨ Features</h2>
 
