@@ -209,7 +209,7 @@ npm install
 # or
 yarn install
 
-# Create a .env.local file based on .env.copy, and set your API URL:
+# Create a .env file based on .env.copy, and set your API URL:
 # NEXT_PUBLIC_BASE_URL=https://your-backend-api.com
 
 # run in development mode
