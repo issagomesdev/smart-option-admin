@@ -216,6 +216,10 @@ yarn install
 yarn dev
 # or
 npm run dev
+
+#go to http://localhost:3000 and login with:
+# Email: admin@admin.com
+# Password: password
 ```
 <h2 id="related-projects">🔗 Related Projects</h2>
 
