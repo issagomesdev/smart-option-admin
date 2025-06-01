@@ -7,6 +7,10 @@
 ![JWT](https://img.shields.io/badge/JWT-Auth-%2300A7E1?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
 
 <p align="center">
+  <img src="https://so.byissa.tech/images/preview.png" alt="preview" width="600"/>
+</p>
+
+<p align="center">
   <a href="#about">About</a> •
   <a href="#features">Features</a> •
   <a href="#technologies">Technologies</a> •
