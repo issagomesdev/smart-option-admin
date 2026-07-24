@@ -1,0 +1,39 @@
+name: smart-option-admin-dev
+
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    restart: unless-stopped
+    environment:
+      # `server.js`/`next dev` leem PORT do ambiente — traduz a convenção do
+      # projeto (APP_PORT, igual ao backend) para o nome que o Next espera.
+      PORT: ${APP_PORT:-3001}
+      # Var real do container (não só em .env.local) — Vitest não carrega
+      # .env.local sozinho (isso é convenção do Next.js), então
+      # `vitest.config.ts#test.env` só acerta o valor certo dentro do
+      # container se ele já estiver aqui.
+      BASE_URL: http://host.docker.internal:3000
+    ports:
+      - "${APP_PORT:-3001}:${APP_PORT:-3001}"
+    volumes:
+      # Hot reload: o código-fonte vem do host, node_modules fica isolado
+      # dentro do container (evita conflito de binários nativos entre SOs) —
+      # mesmo padrão do backend (smart-option/docker-compose.dev.yml).
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./styles:/app/styles
+      - ./middleware.ts:/app/middleware.ts
+      - ./next.config.js:/app/next.config.js
+      - ./package.json:/app/package.json
+      - ./.env.local:/app/.env.local:ro
+      # vitest.config.ts/eslint.config.mjs, para `docker exec ... npx
+      # vitest|eslint` funcionarem de verdade dentro do container — sem isso,
+      # as ferramentas rodam nos defaults, sem nenhuma config do projeto
+      # (achado real do backend na Fase 24: silencioso, só aparece quando um
+      # teste compara contra um valor literal específico de test.env).
+      - ./vitest.config.ts:/app/vitest.config.ts:ro
+      - ./vitest.setup.ts:/app/vitest.setup.ts:ro
+      - ./eslint.config.mjs:/app/eslint.config.mjs:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro

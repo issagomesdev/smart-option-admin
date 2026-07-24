@@ -1,0 +1,9 @@
+# Normaliza para LF independente do `core.autocrlf` de cada máquina — evita
+# que Prettier/ESLint fiquem sinalizando diffs de fim de linha no Windows.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.svg binary

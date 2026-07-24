@@ -28,14 +28,19 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
-# /.env
-# .env.local
-# .env.development.local
-# .env.test.local
-# .env.production.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
+
+# testing (Playwright)
+/playwright-report/
+/test-results/
+/blob-report/
+e2e/.auth-state*.json

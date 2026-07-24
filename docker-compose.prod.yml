@@ -1,0 +1,58 @@
+name: smart-option-admin
+
+services:
+  app:
+    build:
+      context: .
+      target: runtime
+    restart: unless-stopped
+    # NÃO usar `env_file: .env` aqui — mesmo motivo documentado no backend
+    # (smart-option/docker-compose.prod.yml): o Compose interpola `${...}`
+    # também dentro de arquivos carregados por `env_file`. O `.env` é
+    # montado como arquivo dentro do container; o Next.js (não `dotenv`,
+    # diferente do backend) já carrega `.env`/`.env.production` do diretório
+    # de trabalho nativamente.
+    environment:
+      NODE_ENV: production
+      # Fixo para casar com o upstream "app:3000" hard-coded no Caddyfile —
+      # nunca deixar um APP_PORT herdado de um ".env" de outro ambiente
+      # quebrar o proxy silenciosamente (mesma decisão do backend).
+      PORT: 3000
+    volumes:
+      - ./.env:/app/.env:ro
+    networks:
+      - internal
+
+  # Reverse proxy + TLS. Substitui Nginx + Certbot: o próprio Caddy emite e
+  # renova o certificado Let's Encrypt sozinho (desafio HTTP-01 na porta 80,
+  # via o mesmo processo, sem container/cron separado) — não há passo de
+  # "config HTTP temporária" nem edição deste arquivo no primeiro deploy.
+  # DOMAIN/ACME_EMAIL vêm do ".env" (mesmo mecanismo de interpolação
+  # `${...}` documentado no backend, smart-option/docker-compose.prod.yml).
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Certificados + estado da conta ACME — precisa ser um volume nomeado
+      # persistente: perdê-lo faz o Caddy reemitir o certificado no próximo
+      # boot, e o Let's Encrypt tem limite de emissões por domínio/semana.
+      - smart_option_admin_caddy_data:/data
+      - smart_option_admin_caddy_config:/config
+    depends_on:
+      - app
+    networks:
+      - internal
+
+networks:
+  internal:
+
+volumes:
+  smart_option_admin_caddy_data:
+  smart_option_admin_caddy_config:

@@ -1,0 +1,17 @@
+node_modules
+.next
+coverage
+.git
+*.tsbuildinfo
+.env
+.env.local
+.env.development
+.env.production
+.env.example
+.vscode
+docs
+README.md
+e2e
+playwright-report
+test-results
+.tmp-shot-*.png
