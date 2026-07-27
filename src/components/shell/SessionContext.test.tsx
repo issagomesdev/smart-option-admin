@@ -9,7 +9,8 @@ const BASE_USER: SessionUser = {
   surname: 'Teste',
   email: 'admin@test.local',
   roleId: 1,
-  permissions: ['users.write']
+  permissions: ['users.write'],
+  isDemo: false
 }
 
 function SessionProbe() {

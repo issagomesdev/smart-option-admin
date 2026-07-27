@@ -6,22 +6,30 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
 import Box from '@mui/material/Box'
 import Checkbox from '@mui/material/Checkbox'
+import Divider from '@mui/material/Divider'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import IconButton from '@mui/material/IconButton'
 import InputAdornment from '@mui/material/InputAdornment'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
+import AccountEyeOutline from 'mdi-material-ui/AccountEyeOutline'
 import EyeOffOutline from 'mdi-material-ui/EyeOffOutline'
 import EyeOutline from 'mdi-material-ui/EyeOutline'
 import { Button } from '@/components/ui/Button'
 import { loginInputSchema, type LoginInput } from '@/domain/dtos/auth.dto'
 import type { z } from 'zod'
 
-export function LoginForm() {
+export interface LoginFormProps {
+  /** Vem do servidor (`login/page.tsx`), que pergunta ao backend — o browser não decide isso. */
+  demoEnabled?: boolean
+}
+
+export function LoginForm({ demoEnabled = false }: LoginFormProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [showPassword, setShowPassword] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [demoLoading, setDemoLoading] = useState(false)
 
   // `remember` tem `.default(false)` no schema — o tipo de "entrada" do zod
   // o deixa opcional (`z.input<>`), mas o resolver sempre entrega o valor já
@@ -52,6 +60,31 @@ export function LoginForm() {
       return
     }
 
+    redirectAfterAuth()
+  }
+
+  async function onDemoLogin() {
+    setFormError(null)
+    setDemoLoading(true)
+
+    try {
+      const response = await fetch('/api/auth/demo-login', { method: 'POST' })
+      const body = await response.json()
+
+      if (!body.success) {
+        setFormError(body.error?.message ?? 'Não foi possível entrar na demonstração.')
+        return
+      }
+
+      redirectAfterAuth()
+    } catch {
+      setFormError('Não foi possível entrar na demonstração. Tente novamente.')
+    } finally {
+      setDemoLoading(false)
+    }
+  }
+
+  function redirectAfterAuth() {
     const destination = searchParams?.get('from') || '/'
     router.replace(destination)
     router.refresh()
@@ -129,6 +162,33 @@ export function LoginForm() {
       <Button type='submit' intent='primary' size='large' loading={isSubmitting} fullWidth>
         Entrar
       </Button>
+
+      {demoEnabled && (
+        <>
+          <Divider sx={{ '&::before, &::after': { borderColor: 'divider' } }}>
+            <Typography variant='caption' color='text.secondary'>
+              ou
+            </Typography>
+          </Divider>
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Button
+              type='button'
+              intent='secondary'
+              size='large'
+              fullWidth
+              loading={demoLoading}
+              onClick={() => void onDemoLogin()}
+              startIcon={<AccountEyeOutline />}
+            >
+              Entrar como visitante
+            </Button>
+            <Typography variant='caption' color='text.secondary' sx={{ textAlign: 'center' }}>
+              Acesso completo de leitura. Ações irreversíveis ficam desabilitadas.
+            </Typography>
+          </Box>
+        </>
+      )}
     </Box>
   )
 }

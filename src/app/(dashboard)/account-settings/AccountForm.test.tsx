@@ -18,7 +18,15 @@ vi.mock('./account-settings.actions', () => ({
   updateStaffUserAction: (...args: unknown[]) => updateStaffUserAction(...args)
 }))
 
-const USER: SessionUser = { id: 1, name: 'Sr', surname: 'Admin', email: 'admin@admin.com', roleId: 1, permissions: [] }
+const USER: SessionUser = {
+  id: 1,
+  name: 'Sr',
+  surname: 'Admin',
+  email: 'admin@admin.com',
+  roleId: 1,
+  permissions: [],
+  isDemo: false
+}
 
 function renderWithTheme(ui: React.ReactElement) {
   return render(<ThemeProvider theme={theme}>{ui}</ThemeProvider>)

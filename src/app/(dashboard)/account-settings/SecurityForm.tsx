@@ -6,6 +6,7 @@ import { z } from 'zod'
 import Grid from '@mui/material/Grid'
 import TextField from '@mui/material/TextField'
 import { Button } from '@/components/ui/Button'
+import { DemoGuard } from '@/components/ui/DemoGuard'
 import { toast } from '@/components/ui/toast'
 import { updateStaffPasswordAction } from './account-settings.actions'
 
@@ -104,9 +105,11 @@ export function SecurityForm() {
       </Grid>
 
       <Grid size={{ xs: 12 }} sx={{ display: 'flex', gap: 2 }}>
-        <Button type='submit' intent='primary' loading={isSubmitting}>
-          Salvar alterações
-        </Button>
+        <DemoGuard reason='Trocar a senha está desabilitado na demonstração — a conta de visitante é compartilhada.'>
+          <Button type='submit' intent='primary' loading={isSubmitting}>
+            Salvar alterações
+          </Button>
+        </DemoGuard>
       </Grid>
     </Grid>
   )

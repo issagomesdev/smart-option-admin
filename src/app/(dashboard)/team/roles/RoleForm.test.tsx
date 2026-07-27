@@ -29,6 +29,7 @@ function renderWithSession(ui: React.ReactElement, permissions: string[]) {
     surname: 'Teste',
     email: 'admin@test.local',
     roleId: 1,
+    isDemo: false,
     permissions
   }
   return render(

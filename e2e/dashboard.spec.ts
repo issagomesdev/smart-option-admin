@@ -3,18 +3,20 @@ import { expect, test } from '@playwright/test'
 /**
  * Fluxo completo real (browser, não só `request`): visitar `/` deslogado →
  * middleware redireciona para `/login` → login de verdade contra o backend
- * → Dashboard com dados reais → logout → `/` volta a redirecionar. Só um
- * login por arquivo (mesmo motivo do `e2e/auth.spec.ts`: rate limit real de
- * 10 tentativas/15min na rota de login).
+ * → Dashboard v2 (KPIs + gráfico + indicador + movimentações) com dados
+ * reais → logout → `/` volta a redirecionar. Só um login por arquivo (mesmo
+ * motivo do `e2e/auth.spec.ts`: rate limit real de 10 tentativas/15min na
+ * rota de login) — por isso o conteúdo novo do dashboard é conferido dentro
+ * do mesmo teste que já fazia login/logout, em vez de um teste próprio.
  */
-test.describe('Dashboard (App Router, primeira tela migrada)', () => {
+test.describe('Dashboard (App Router, agregador v2)', () => {
   test('/ deslogado redireciona para /login (middleware)', async ({ page }) => {
     await page.goto('/')
     await page.waitForURL(/\/login/)
     await expect(page.getByRole('heading', { name: 'Smart Option Admin' })).toBeVisible()
   })
 
-  test('login real → Dashboard com dados reais → logout → / redireciona de novo', async ({ page }) => {
+  test('login real → Dashboard v2 com dados reais → logout → / redireciona de novo', async ({ page }) => {
     await page.goto('/login')
 
     await page.getByLabel('E-mail').fill('admin@admin.com')
@@ -24,17 +26,35 @@ test.describe('Dashboard (App Router, primeira tela migrada)', () => {
     await page.waitForURL('/')
     await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
 
-    // Estatísticas reais vindas do backend (não mockadas) — só confere que o
-    // número renderizado é um inteiro não-negativo, não um valor fixo (os
-    // dados do ambiente de dev mudam).
-    await expect(page.getByText('Total de Usuários')).toBeVisible()
-    const totalUsersCard = page.locator('text=Total de Usuários').locator('..')
-    await expect(totalUsersCard.getByText(/^\d+$/)).toBeVisible()
+    // Os 4 KPIs (dados reais do backend, não mockados — só confere que cada
+    // card renderizou, não um valor fixo, já que o ambiente de dev muda).
+    await expect(page.getByText('Usuários ativos')).toBeVisible()
+    await expect(page.getByText('Saldo da rede')).toBeVisible()
+    await expect(page.getByText('Depósitos')).toBeVisible()
+    await expect(page.getByText('Saques pendentes')).toBeVisible()
 
-    // Navegação lateral funciona (mesmo que /users ainda seja a tela antiga).
+    // Seletor de período reage e recarrega o dashboard inteiro.
+    await expect(page.getByRole('button', { name: 'Hoje' })).toBeVisible()
+    await page.getByRole('button', { name: '7 dias' }).click()
+    await expect(page.getByRole('button', { name: '7 dias' })).toHaveAttribute('aria-pressed', 'true')
+
+    // Gráfico de rentabilidade + indicador circular + movimentações recentes.
+    await expect(page.getByText('Rentabilidade da rede', { exact: true })).toBeVisible()
+    await expect(page.getByText('Solicitações aprovadas hoje')).toBeVisible()
+    await expect(page.getByText('Movimentações recentes')).toBeVisible()
+
+    // "Ver todas" leva para a nova Auditoria Financeira.
+    await page.getByRole('link', { name: 'Ver todas' }).click()
+    await page.waitForURL(/\/audit\/?$/)
+    await expect(page.getByRole('heading', { name: 'Auditoria Financeira' })).toBeVisible()
+    await page.goBack()
+    await page.waitForURL('/')
+
+    // Navegação lateral funciona, incluindo o item novo desta fase.
     await expect(page.getByRole('link', { name: 'Dashboard' })).toBeVisible()
     await expect(page.getByRole('link', { name: 'Usuários' })).toBeVisible()
     await expect(page.getByRole('link', { name: 'Solicitações' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Auditoria Financeira' })).toBeVisible()
 
     // Logout via menu do usuário.
     await page.getByRole('button', { name: 'Menu do usuário' }).click()

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import { Card } from '@/components/ui/Card'
-import { getCurrentUser } from '@/infrastructure/http/session'
+import { getCurrentUser, isDemoBackend } from '@/infrastructure/http/session'
 import { LoginForm } from './LoginForm'
 
 const APP_NAME = 'Smart Option Admin'
@@ -18,6 +18,10 @@ export default async function LoginPage() {
   if (user) {
     redirect('/')
   }
+
+  // Quem decide é o backend (`APP_DEMO`), não uma env var própria do painel — evita as duas
+  // fontes divergirem e o botão aparecer apontando para uma rota que responde 404.
+  const demoEnabled = await isDemoBackend()
 
   return (
     <Box
@@ -41,7 +45,7 @@ export default async function LoginPage() {
           </Typography>
         </Box>
         <Card>
-          <LoginForm />
+          <LoginForm demoEnabled={demoEnabled} />
         </Card>
       </Box>
     </Box>

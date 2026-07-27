@@ -17,6 +17,7 @@
   <a href="#rotas">Rotas</a> •
   <a href="#comecando">Começando</a> •
   <a href="#ambientes">Configuração de Ambientes</a> •
+  <a href="#modo-demo">Modo Demonstração</a> •
   <a href="#testes">Testes</a> •
   <a href="#deploy">Deploy</a> •
   <a href="#seguranca">Segurança</a> •
@@ -29,11 +30,9 @@
 
 <h2 id="sobre">📌 Sobre</h2>
 
-**Smart Option Admin** é o painel administrativo da plataforma **Smart Option**, responsável pelo gerenciamento operacional da aplicação. Por meio dele, a equipe administrativa gerencia usuários, aprova solicitações financeiras, acompanha a rede de afiliados, monitora indicadores e administra perfis de acesso e permissões.
+**Smart Option Admin** é o **painel administrativo** da plataforma **Smart Option**, desenvolvido para centralizar a operação e o gerenciamento da aplicação. Através dele, a equipe administrativa acompanha indicadores em tempo real, gerencia usuários, aprova solicitações financeiras, monitora a rede de afiliados, administra planos de investimento, acompanha movimentações auditadas e controla perfis de acesso e permissões, reunindo em um único ambiente todas as ferramentas necessárias para a gestão da plataforma.
 
-Desenvolvido com **Next.js (App Router)** e **Material UI**, o painel consome a API do **Smart Option Backend**, mantendo toda a lógica de negócio centralizada no backend.
-
-A comunicação com a API segue o padrão **BFF (Backend for Frontend)**: o navegador nunca se comunica diretamente com o backend nem tem acesso aos tokens de autenticação. Todas as requisições passam pelos **Route Handlers** do Next.js, que armazenam os tokens em cookies `HttpOnly`, adicionando uma camada extra de segurança.
+Este repositório reúne o **frontend** do painel administrativo, desenvolvido com **Next.js (App Router)** e **Material UI**. A aplicação consome a **API REST** do **Smart Option Backend**, mantendo toda a lógica de negócio centralizada no servidor. A comunicação segue o padrão **Backend for Frontend (BFF)**: o navegador nunca acessa diretamente a API nem possui contato com os tokens de autenticação. Todas as requisições passam pelos **Route Handlers** do Next.js, que armazenam os tokens em **cookies HttpOnly**, adicionando uma camada extra de segurança e proporcionando uma arquitetura mais desacoplada, segura e escalável.
 
 <h2 id="arquitetura">🏗️ Arquitetura</h2>
 
@@ -63,47 +62,105 @@ app/             → páginas, layouts, Route Handlers (BFF) e Server Actions
 
 ### 📊 Dashboard
 
-- Métricas em tempo real da plataforma (usuários, saldo e planos).
-- Filtros por período para acompanhamento dos indicadores.
+O painel centraliza os principais indicadores da plataforma em uma única visão operacional.
 
-### 👥 Gestão de usuários
+- Dashboard unificado inspirado em produtos como **Stripe**, **Linear** e **Vercel**, reunindo KPIs, gráficos e movimentações recentes em uma única consulta.
+- Indicadores de **usuários ativos**, **saldo da rede**, **depósitos aprovados**, **saques pendentes** e **aprovações financeiras do dia**, com comparação em relação ao período anterior.
+- Gráfico de evolução da rentabilidade da rede e tabela de movimentações recentes com acesso rápido ao histórico completo.
+- Filtros por período (`Hoje`, `7 dias`, `30 dias` ou personalizado), além de recortes opcionais por usuário ou plano.
+- Atualização reativa, *skeleton loading*, estados de erro e carregamento otimizados para uma experiência fluida.
 
-- Listagem, pesquisa e filtros server-side.
-- Cadastro, edição e visualização de usuários.
-- Histórico de extratos, saques e rede de afiliados.
-- Bloqueio e desbloqueio de contas.
-- Ajuste manual de saldo (auditado pelo backend).
+---
 
-### 💳 Gestão de solicitações
+### 🔍 Auditoria Financeira
 
-- Aprovação e rejeição de saques.
-- Acompanhamento de depósitos, adesões e solicitações de suporte.
-- Rede de afiliados e solicitações com paginação e filtros server-side.
+Todas as movimentações financeiras da plataforma ficam centralizadas em uma única tela de auditoria.
+
+- Histórico completo de depósitos, saques, rendimentos, comissões, adesões, ajustes administrativos e demais transações.
+- Busca avançada com filtros combináveis por período, usuário, tipo, status, valores e pesquisa textual.
+- Ordenação, paginação server-side e visualização detalhada de cada movimentação.
+- Informações completas da operação, incluindo usuário, identificadores, gateway, administrador responsável, datas e observações.
+- Exportação dos resultados filtrados.
+
+---
+
+### 📦 Gestão de Planos
+
+Administração completa do catálogo de produtos da plataforma.
+
+- Cadastro, edição, ativação, desativação e gerenciamento dos planos disponíveis.
+- Busca, filtros, ordenação e paginação para facilitar a administração.
+- Suporte aos modelos **AUTO** (compra imediata via PIX) e **MANUAL** (solicitação enviada para atendimento).
+- Proteção dos planos padrão contra exclusão e alertas quando alterações impactam assinantes existentes.
+
+---
+
+### 👥 Gestão de Usuários
+
+Gerenciamento completo dos usuários cadastrados na plataforma.
+
+- Pesquisa, filtros e paginação server-side.
+- Cadastro, edição, bloqueio e desbloqueio de contas.
+- Consulta ao histórico financeiro, rede de afiliados e solicitações do usuário.
+- Ajustes manuais de saldo totalmente auditados pelo backend.
+
+---
+
+### 💳 Gestão Financeira
+
+Centralização das solicitações operacionais da plataforma.
+
+- Aprovação ou rejeição de solicitações de saque.
+- Acompanhamento de depósitos, adesões aos planos e atendimentos de suporte.
+- Visualização da rede de afiliados com filtros e paginação.
+
+---
 
 ### 🛡️ Administração
 
+Ferramentas para gerenciamento do ambiente administrativo.
+
 - Gerenciamento da equipe administrativa.
-- CRUD de papéis e permissões (RBAC).
-- Configuração dos dados da conta do usuário autenticado.
-- Alteração de senha.
+- Controle de papéis e permissões (**RBAC**).
+- Configuração do perfil do administrador autenticado.
+- Alteração de credenciais e preferências da conta.
+
+---
+
+### 🎭 Modo Demonstração
+
+Modo especial desenvolvido para apresentação pública do projeto.
+
+- Login como visitante sem necessidade de credenciais.
+- Identificação visual discreta indicando o ambiente de demonstração.
+- Bloqueio de operações irreversíveis diretamente no backend.
+- Interface adaptada para informar quando determinada ação não está disponível no ambiente demo.
+
+---
 
 ### 🔒 Segurança
 
-- Autenticação protegida por BFF e cookies `HttpOnly`.
+Boas práticas aplicadas em toda a aplicação.
+
+- Arquitetura **Backend for Frontend (BFF)** utilizando **Next.js Route Handlers**.
+- Tokens armazenados exclusivamente em **cookies HttpOnly**.
 - Controle de permissões integrado ao backend.
-- Content Security Policy (CSP) e demais cabeçalhos de segurança configurados pelo Next.js.
+- Proteção por **Content Security Policy (CSP)**, cabeçalhos de segurança e validações em todas as operações críticas.
 
 <h2 id="stack">🛠️ Stack</h2>
 
 | Categoria | Tecnologias |
 |---|---|
-| Framework | [Next.js 16](https://nextjs.org/) (App Router, Turbopack), React 19, TypeScript 5 |
-| Interface | [Material UI (MUI)](https://mui.com/) 9, Emotion |
-| Formulários | React Hook Form + Zod (`@hookform/resolvers`) |
-| Validação | [Zod](https://zod.dev/) (DTOs, contratos da API e variáveis de ambiente) |
-| Autenticação | BFF (Backend for Frontend), cookies `HttpOnly` e Server Actions |
-| Testes | [Vitest](https://vitest.dev/) + Testing Library (unitários e integração), [Playwright](https://playwright.dev/) (E2E) |
-| Deploy | Docker multi-stage (`output: standalone`), Docker Compose e [Caddy](https://caddyserver.com/) (TLS automático via Let's Encrypt) |
+| **Framework** | [Next.js 16](https://nextjs.org/) (App Router, Turbopack), React 19, TypeScript 5 |
+| **Interface** | [Material UI (MUI)](https://mui.com/), Emotion |
+| **Gerenciamento de Estado** | React Context API |
+| **Formulários** | React Hook Form + [Zod](https://zod.dev/) (`@hookform/resolvers`) |
+| **Validação** | Zod (formulários, contratos da API e variáveis de ambiente) |
+| **Comunicação com API** | Fetch API, BFF (Backend for Frontend), Route Handlers do Next.js |
+| **Autenticação** | Cookies `HttpOnly`, Access Token, Refresh Token e renovação automática de sessão |
+| **Qualidade** | ESLint, Prettier e TypeScript Strict Mode |
+| **Testes** | [Vitest](https://vitest.dev/) + Testing Library (unitários e integração), [Playwright](https://playwright.dev/) (E2E) |
+| **Infraestrutura** | Docker multi-stage (`output: standalone`), Docker Compose e [Caddy](https://caddyserver.com/) (TLS automático via Let's Encrypt) |
 
 <h2 id="estrutura">📁 Estrutura</h2>
 
@@ -128,51 +185,97 @@ Caddyfile                   # configuração do Caddy para produção
 
 <h2 id="rotas">📍 Rotas</h2>
 
+O painel administrativo é organizado por módulos, cada um dedicado a uma área específica da operação da plataforma. Abaixo estão as principais rotas da aplicação.
+
 ### 🔐 Autenticação
+
+Gerenciamento do acesso ao painel administrativo.
 
 | Rota | Descrição |
 |---|---|
-| `/login` | Autenticação da equipe administrativa |
+| `/login` | Autenticação da equipe administrativa e acesso ao painel. |
+
+---
 
 ### 📊 Dashboard
 
-| Rota | Descrição |
-|---|---|
-| `/` | Dashboard com métricas e filtros por período |
-
-### 👥 Usuários
+Central de monitoramento da plataforma.
 
 | Rota | Descrição |
 |---|---|
-| `/users` | Listagem e pesquisa de usuários |
-| `/users/create` | Cadastro de usuário |
-| `/users/[id]/edit` | Edição de usuário |
-| `/users/[id]` | Perfil do usuário (extrato, rede e solicitações) |
-| `/users/view/[view]` | Visualizações auxiliares |
+| `/` | Dashboard principal com KPIs, indicadores financeiros, gráfico de rentabilidade da rede e movimentações recentes, incluindo filtros por período, usuário e plano. |
 
-### 💳 Solicitações
+---
+
+### 🔍 Auditoria Financeira
+
+Consulta e rastreamento das movimentações financeiras.
 
 | Rota | Descrição |
 |---|---|
-| `/requests` | Depósitos, saques, adesões, suporte e rede de afiliados |
+| `/audit` | Histórico completo de movimentações financeiras, com filtros avançados, ordenação, detalhes da operação e exportação dos resultados. |
+
+---
+
+### 👥 Gestão de Usuários
+
+Administração dos usuários cadastrados na plataforma.
+
+| Rota | Descrição |
+|---|---|
+| `/users` | Listagem, pesquisa e filtros de usuários. |
+| `/users/create` | Cadastro de novos usuários. |
+| `/users/[id]` | Perfil completo do usuário, incluindo extrato, rede de afiliados e solicitações. |
+| `/users/[id]/edit` | Edição das informações do usuário. |
+| `/users/view/[view]` | Visualizações auxiliares relacionadas ao gerenciamento de usuários. |
+
+---
+
+### 💳 Gestão Financeira
+
+Operação das solicitações financeiras da plataforma.
+
+| Rota | Descrição |
+|---|---|
+| `/requests` | Gerenciamento de depósitos, saques, adesões a planos, atendimentos de suporte e acompanhamento da rede de afiliados. |
+
+---
+
+### 📦 Gestão de Planos
+
+Administração do catálogo de produtos da plataforma.
+
+| Rota | Descrição |
+|---|---|
+| `/plans` | Listagem dos planos com busca, filtros, ordenação e exportação. |
+| `/plans/create` | Cadastro de novos planos. |
+| `/plans/[id]/edit` | Edição das informações de um plano existente. |
+
+---
 
 ### 🛡️ Administração
 
-| Rota | Descrição |
-|---|---|
-| `/team` | Gerenciamento da equipe |
-| `/team/create` | Cadastro de colaborador |
-| `/team/[id]/edit` | Edição de colaborador |
-| `/team/roles` | Papéis e permissões |
-| `/team/roles/create` | Cadastro de papel |
-| `/team/roles/[id]/edit` | Edição de papel |
-| `/account-settings` | Dados pessoais e alteração de senha |
-
-### 🎨 Desenvolvimento
+Gerenciamento da equipe administrativa e das permissões de acesso.
 
 | Rota | Descrição |
 |---|---|
-| `/design-system` | Catálogo e preview dos componentes do Design System |
+| `/team` | Listagem e gerenciamento da equipe administrativa. |
+| `/team/create` | Cadastro de novos colaboradores. |
+| `/team/[id]/edit` | Edição de colaboradores. |
+| `/team/roles` | Gerenciamento de papéis e permissões (RBAC). |
+| `/team/roles/create` | Cadastro de novos papéis. |
+| `/team/roles/[id]/edit` | Edição de papéis e permissões. |
+| `/account-settings` | Configuração da conta do administrador autenticado, incluindo dados pessoais e alteração de senha. |
+
+---
+
+### 🎨 Design System
+
+Ambiente dedicado ao desenvolvimento e validação dos componentes da interface.
+
+| Rota | Descrição |
+|---|---|
+| `/design-system` | Catálogo dos componentes reutilizáveis, tokens visuais e demonstrações utilizadas durante o desenvolvimento da interface. |
 
 ---
 
@@ -181,6 +284,7 @@ Caddyfile                   # configuração do Caddy para produção
 | Método | Rota | Descrição |
 |---|---|---|
 | POST | `/api/auth/login` | Realiza o login e cria a sessão (`HttpOnly`). |
+| POST | `/api/auth/demo-login` | Cria uma sessão de visitante, sem credenciais. Responde 404 quando o backend não está em modo demonstração. |
 | POST | `/api/auth/refresh` | Renova os tokens de autenticação. |
 | POST | `/api/auth/logout` | Encerra a sessão e remove os cookies. |
 | GET | `/api/auth/me` | Retorna o usuário autenticado. |
@@ -194,7 +298,7 @@ Caddyfile                   # configuração do Caddy para produção
 - Docker + Docker Compose
 - Backend **Smart Option** em execução (API + Bot)
 
-## Via Docker (recomendado)
+### Via Docker (recomendado)
 
 ```bash
 git clone <url-do-repositorio> smart-option-admin
@@ -219,7 +323,7 @@ http://localhost:<APP_PORT>
 
 O ambiente usa **Hot Reload** via bind mount, refletindo alterações em `src/` sem necessidade de rebuild da imagem.
 
-## Sem Docker
+### Sem Docker
 
 ```bash
 git clone <url-do-repositorio> smart-option-admin
@@ -238,7 +342,7 @@ A aplicação ficará disponível em:
 http://localhost:<APP_PORT>
 ```
 
-## Scripts disponíveis
+### Scripts disponíveis
 
 | Script | Descrição |
 |---|---|
@@ -253,7 +357,7 @@ http://localhost:<APP_PORT>
 | `npm run test:coverage` | Gera o relatório de cobertura dos testes |
 | `npm run test:e2e` | Executa os testes end-to-end com Playwright |
 
-## Primeiro acesso
+### Primeiro acesso
 
 Após iniciar o frontend, faça login com o usuário administrador criado pelo seed do backend:
 
@@ -289,6 +393,36 @@ Todas as variáveis usadas pela aplicação são validadas na inicialização po
 | `DOMAIN` *(produção)* | Domínio público do painel administrativo. Usado pelo Caddy para servir a aplicação e emitir certificados TLS automaticamente. |
 | `ACME_EMAIL` *(produção)* | E-mail usado pelo Let's Encrypt para notificações relacionadas ao certificado TLS. |
 
+> O painel **não** tem variável própria para o modo demonstração. Quem decide é o backend (`APP_DEMO`), e o painel apenas reflete — assim as duas pontas nunca divergem. Ver [Modo Demonstração](#modo-demo).
+
+<h2 id="modo-demo">🎭 Modo Demonstração</h2>
+
+O painel administrativo oferece um **modo de demonstração** pensado para apresentações, estudos de caso e portfólio. Quando o backend está com `APP_DEMO=true`, a interface adapta automaticamente seu comportamento, permitindo que qualquer visitante explore praticamente todas as funcionalidades da aplicação sem comprometer a integridade do ambiente.
+
+Nenhuma configuração adicional é necessária no frontend: toda a detecção do modo demonstração acontece automaticamente.
+
+### 👤 Login de visitante
+
+Quando disponível, a tela de autenticação exibe o botão **"Entrar como visitante"**, permitindo acessar o painel sem a necessidade de credenciais públicas.
+
+A sessão criada possui o mesmo comportamento de uma autenticação convencional, proporcionando uma experiência completa de navegação por todo o sistema.
+
+### 🛡️ Ambiente protegido
+
+Para preservar a integridade da demonstração, operações críticas permanecem visíveis, porém indisponíveis para execução. Dessa forma, o visitante consegue conhecer o fluxo completo da aplicação sem gerar alterações irreversíveis.
+
+Entre as ações protegidas estão:
+
+- Aprovação de solicitações de saque.
+- Gerenciamento da equipe administrativa.
+- Gerenciamento de papéis e permissões.
+- Alteração dos dados da conta administrativa.
+- Alteração de senha.
+
+Sempre que uma ação estiver indisponível, a interface informa claramente o motivo, proporcionando uma experiência transparente ao usuário.
+
+> **Importante:** as restrições exibidas pelo painel têm apenas finalidade visual e de experiência do usuário. A proteção efetiva acontece no backend, que continua validando todas as permissões e recusando operações bloqueadas, mesmo que uma requisição seja enviada diretamente para a API.
+
 <h2 id="testes">🧪 Testes</h2>
 
 Execute os testes com:
@@ -321,7 +455,7 @@ A aplicação usa:
 - **Docker Compose**
 - **Caddy** como reverse proxy, com emissão e renovação automática de certificados TLS (Let's Encrypt)
 
-### Deploy
+### Passo a passo
 
 ```bash
 cp .env.example .env
@@ -416,6 +550,9 @@ Consulte o arquivo [LICENSE](LICENSE) para os termos completos da licença.
 
 <h2 id="related-projects">🔗 Projetos Relacionados</h2>
 
+O **Smart Option** foi desenvolvido como um ecossistema composto por aplicações independentes, cada uma dedicada a uma responsabilidade específica. A divisão em múltiplos repositórios proporciona maior organização, facilita o desenvolvimento paralelo e torna a arquitetura mais modular e escalável.
+
 | Projeto | Descrição | Repositório |
 |----------|-----------|-------------|
+| 🌐 Landing Page | Landing page oficial do Smart Option, desenvolvida para apresentar a plataforma, seus diferenciais e a experiência proposta aos usuários. | https://github.com/issagomesdev/smart-option-page |
 | ⚙️ Backend (API + Bot) | API e bot do Telegram responsáveis pelas regras de negócio, autenticação, pagamentos, notificações e integrações usadas pelo painel administrativo. | https://github.com/issagomesdev/smart-option |

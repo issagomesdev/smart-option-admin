@@ -7,6 +7,7 @@ import { z } from 'zod'
 import Grid from '@mui/material/Grid'
 import TextField from '@mui/material/TextField'
 import { Button } from '@/components/ui/Button'
+import { DemoGuard } from '@/components/ui/DemoGuard'
 import { toast } from '@/components/ui/toast'
 import type { SessionUser } from '@/domain/dtos/auth.dto'
 import { updateStaffUserAction } from './account-settings.actions'
@@ -54,7 +55,13 @@ export function AccountForm({ user }: AccountFormProps) {
           name='name'
           control={control}
           render={({ field }) => (
-            <TextField {...field} label='Nome' fullWidth error={Boolean(errors.name)} helperText={errors.name?.message} />
+            <TextField
+              {...field}
+              label='Nome'
+              fullWidth
+              error={Boolean(errors.name)}
+              helperText={errors.name?.message}
+            />
           )}
         />
       </Grid>
@@ -91,9 +98,11 @@ export function AccountForm({ user }: AccountFormProps) {
       </Grid>
 
       <Grid size={{ xs: 12 }} sx={{ display: 'flex', gap: 2 }}>
-        <Button type='submit' intent='primary' loading={isSubmitting}>
-          Salvar alterações
-        </Button>
+        <DemoGuard reason='Alterar credenciais administrativas está desabilitado na demonstração.'>
+          <Button type='submit' intent='primary' loading={isSubmitting}>
+            Salvar alterações
+          </Button>
+        </DemoGuard>
       </Grid>
     </Grid>
   )

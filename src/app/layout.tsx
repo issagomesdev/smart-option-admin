@@ -9,8 +9,8 @@ export const metadata: Metadata = {
   title: APP_NAME,
   description: APP_NAME,
   icons: {
-    icon: '/images/favicon.png',
-    apple: '/images/apple-touch-icon.png'
+    icon: '/images/favicon.webp',
+    apple: '/images/favicon.webp'
   }
 }
 

@@ -13,6 +13,7 @@ import Select from '@mui/material/Select'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import { Button } from '@/components/ui/Button'
+import { DemoGuard } from '@/components/ui/DemoGuard'
 import { toast } from '@/components/ui/toast'
 import type { Role } from '@/domain/dtos/roles.dto'
 import type { StaffDetail } from '@/domain/dtos/staff.dto'
@@ -201,9 +202,11 @@ export function TeamForm({ mode, staffId, initialValues }: TeamFormProps) {
       </Grid>
 
       <Grid size={{ xs: 12 }} sx={{ display: 'flex', gap: 2 }}>
-        <Button type='submit' intent='primary' loading={isSubmitting}>
-          {mode === 'create' ? 'Cadastrar' : 'Salvar alterações'}
-        </Button>
+        <DemoGuard reason='Gerenciar a equipe está desabilitado na demonstração — evita trancar o acesso dos próximos visitantes.'>
+          <Button type='submit' intent='primary' loading={isSubmitting}>
+            {mode === 'create' ? 'Cadastrar' : 'Salvar alterações'}
+          </Button>
+        </DemoGuard>
         <Button intent='ghost' onClick={() => router.push('/team')}>
           Cancelar
         </Button>

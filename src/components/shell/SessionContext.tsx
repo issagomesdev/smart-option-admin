@@ -28,3 +28,17 @@ export function useHasPermission(permission: Permission): boolean {
   const { permissions } = useSession()
   return permissions.includes(permission)
 }
+
+/**
+ * Sessão rodando no ambiente de demonstração. Como `useHasPermission`, serve só para UX — desabilitar
+ * o controle e explicar o porquê, em vez de deixar o visitante clicar e tomar um 403 seco. A recusa
+ * de verdade continua sendo do backend (`denyInDemo`), e as duas listas precisam combinar.
+ *
+ * Diferente de `useSession`, NÃO lança sem provider: `DemoGuard` envolve botões em formulários que
+ * são renderizados isoladamente (testes de componente, `/design-system`), e exigir uma sessão só
+ * para saber se o modo demo está ligado acoplaria esses componentes ao shell inteiro. Sem sessão a
+ * resposta é `false` — o padrão seguro, que é também o comportamento de produção.
+ */
+export function useIsDemo(): boolean {
+  return useContext(SessionContext)?.isDemo ?? false
+}

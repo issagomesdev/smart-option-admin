@@ -24,7 +24,11 @@ vi.mock('./cookies', () => ({
 import { BackendApiError } from './backend-client'
 import { authorizedFetch, getCurrentUser, loginWithBackend, logoutSession, refreshSession } from './session'
 
+/** Como o backend devolve dentro de `user` — sem `isDemo`, que é campo irmão na resposta. */
 const SESSION_USER = { id: 1, name: 'Admin', surname: 'Teste', email: 'admin@test.local', roleId: 1, permissions: [] }
+
+/** Como o painel consome: `isDemo` mesclado no objeto de sessão por `getCurrentUser`/`loginWithBackend`. */
+const SESSION_USER_WITH_DEMO = { ...SESSION_USER, isDemo: false }
 
 /**
  * Núcleo do BFF de sessão (Fase 6 — auditoria de cobertura encontrou 0%
@@ -62,7 +66,7 @@ describe('session (BFF de autenticação)', () => {
         refreshToken: 'refresh-1',
         remember: true
       })
-      expect(user).toEqual(SESSION_USER)
+      expect(user).toEqual(SESSION_USER_WITH_DEMO)
     })
 
     it('sem remember explícito, assume false', async () => {
@@ -172,7 +176,7 @@ describe('session (BFF de autenticação)', () => {
 
       const user = await getCurrentUser()
 
-      expect(user).toEqual(SESSION_USER)
+      expect(user).toEqual(SESSION_USER_WITH_DEMO)
       expect(getRefreshToken).not.toHaveBeenCalled()
     })
 
@@ -187,7 +191,7 @@ describe('session (BFF de autenticação)', () => {
 
       const user = await getCurrentUser()
 
-      expect(user).toEqual(SESSION_USER)
+      expect(user).toEqual(SESSION_USER_WITH_DEMO)
       expect(backendFetch).toHaveBeenLastCalledWith('/api/auth/token', { method: 'POST', accessToken: 'access-new' })
     })
 

@@ -22,7 +22,8 @@ const CURRENT_USER: SessionUser = {
   surname: 'Teste',
   email: 'admin@test.local',
   roleId: 1,
-  permissions: ['staff.manage']
+  permissions: ['staff.manage'],
+  isDemo: false
 }
 
 function renderWithSession(permissions: string[] = CURRENT_USER.permissions) {
@@ -108,12 +109,16 @@ describe('TeamList', () => {
     listStaffAction.mockClear()
 
     await userEvent.click(screen.getByText('Nome'))
-    expect(listStaffAction).toHaveBeenCalledWith(expect.objectContaining({ sortBy: 'name', sortDirection: 'asc', page: 1 }))
+    expect(listStaffAction).toHaveBeenCalledWith(
+      expect.objectContaining({ sortBy: 'name', sortDirection: 'asc', page: 1 })
+    )
 
     await screen.findByText('Novo Staff')
     listStaffAction.mockClear()
 
     await userEvent.click(screen.getByText('Nome'))
-    expect(listStaffAction).toHaveBeenCalledWith(expect.objectContaining({ sortBy: 'name', sortDirection: 'desc', page: 1 }))
+    expect(listStaffAction).toHaveBeenCalledWith(
+      expect.objectContaining({ sortBy: 'name', sortDirection: 'desc', page: 1 })
+    )
   })
 })

@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import AppBar from '@mui/material/AppBar'
 import Avatar from '@mui/material/Avatar'
 import Box from '@mui/material/Box'
+import Chip from '@mui/material/Chip'
 import Divider from '@mui/material/Divider'
 import Drawer from '@mui/material/Drawer'
 import IconButton from '@mui/material/IconButton'
@@ -17,6 +18,7 @@ import ListItemText from '@mui/material/ListItemText'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import Toolbar from '@mui/material/Toolbar'
+import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import { useTheme } from '@mui/material/styles'
@@ -24,9 +26,11 @@ import AccountGroup from 'mdi-material-ui/AccountGroup'
 import AccountSupervisorOutline from 'mdi-material-ui/AccountSupervisorOutline'
 import BriefcaseVariant from 'mdi-material-ui/BriefcaseVariant'
 import CogOutline from 'mdi-material-ui/CogOutline'
+import FileDocumentOutline from 'mdi-material-ui/FileDocumentOutline'
 import HomeCircleOutline from 'mdi-material-ui/HomeCircleOutline'
 import LogoutVariant from 'mdi-material-ui/LogoutVariant'
 import MenuIcon from 'mdi-material-ui/Menu'
+import PackageVariantClosed from 'mdi-material-ui/PackageVariantClosed'
 import type { SessionUser } from '@/domain/dtos/auth.dto'
 import type { Permission } from '@/domain/permissions'
 import { toast } from '@/components/ui/toast'
@@ -40,6 +44,8 @@ const NAV_ITEMS: { label: string; href: string; icon: typeof HomeCircleOutline; 
   { label: 'Dashboard', href: '/', icon: HomeCircleOutline },
   { label: 'Usuários', href: '/users', icon: AccountGroup },
   { label: 'Solicitações', href: '/requests', icon: BriefcaseVariant },
+  { label: 'Auditoria Financeira', href: '/audit', icon: FileDocumentOutline },
+  { label: 'Planos', href: '/plans', icon: PackageVariantClosed, permission: 'plans.manage' },
   { label: 'Equipe', href: '/team', icon: AccountSupervisorOutline, permission: 'staff.manage' }
 ]
 
@@ -129,6 +135,17 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
             </IconButton>
           )}
           <Box sx={{ flex: 1 }} />
+          {user.isDemo && (
+            <Tooltip title='Ambiente de demonstração — ações irreversíveis estão desabilitadas e os dados são restaurados periodicamente.'>
+              <Chip
+                label='DEMO MODE'
+                size='small'
+                variant='outlined'
+                color='warning'
+                sx={{ mr: 2, fontWeight: 700, letterSpacing: '0.06em', cursor: 'default' }}
+              />
+            </Tooltip>
+          )}
           <IconButton
             aria-label='Menu do usuário'
             aria-controls={menuAnchor ? 'user-menu' : undefined}

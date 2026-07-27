@@ -1,19 +1,19 @@
-import {
-  dashboardBalanceResponseSchema,
-  dashboardUsersSchema,
-  plansResponseSchema,
-  type DashboardBalanceParams
-} from '@/domain/dtos/dashboard.dto'
+import { dashboardSummarySchema, plansResponseSchema, type DashboardFilters } from '@/domain/dtos/dashboard.dto'
 import { authorizedFetch } from '../session'
 
-export async function getDashboardUsers() {
-  const data = await authorizedFetch('/api/dashboard/users')
-  return dashboardUsersSchema.parse(data)
+/** `GET` + query string (não corpo) — o único filtro deste recurso é o período/recorte, cabe numa URL. */
+function toQueryString(filters: DashboardFilters): string {
+  const params = new URLSearchParams({ period: filters.period })
+  if (filters.start) params.set('start', filters.start)
+  if (filters.end) params.set('end', filters.end)
+  if (filters.userId) params.set('userId', String(filters.userId))
+  if (filters.productId) params.set('productId', String(filters.productId))
+  return params.toString()
 }
 
-export async function getDashboardBalance({ user_id, product_id, period }: DashboardBalanceParams) {
-  const data = await authorizedFetch(`/api/dashboard/balance/${user_id}/${product_id}/${period}`)
-  return dashboardBalanceResponseSchema.parse(data)
+export async function getDashboardSummary(filters: DashboardFilters) {
+  const data = await authorizedFetch(`/api/dashboard/summary?${toQueryString(filters)}`)
+  return dashboardSummarySchema.parse(data)
 }
 
 export async function getPlans() {

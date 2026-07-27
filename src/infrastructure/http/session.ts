@@ -34,6 +34,42 @@ export async function loginWithBackend(input: LoginInput): Promise<SessionUser> 
 }
 
 /**
+ * O backend está em modo demonstração? Lido do healthcheck público, que é a única rota do backend
+ * acessível sem sessão — e a tela de login, por definição, não tem sessão.
+ *
+ * Em caso de qualquer falha devolve `false`: a tela de login some com o botão de visitante em vez
+ * de quebrar, e um ambiente que não é demo nunca passa a oferecer o acesso anônimo por engano.
+ */
+export async function isDemoBackend(): Promise<boolean> {
+  try {
+    const data = await backendFetch<{ demo?: boolean }>('/api/health', { method: 'GET' })
+    return data.demo === true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Login de visitante do modo demonstração. Reaproveita `setSessionCookies` — os mesmos cookies
+ * httpOnly do login normal, para que todo o resto do painel (middleware, `authorizedFetch`,
+ * refresh) funcione sem saber que a sessão veio por outro caminho.
+ *
+ * `remember: false` de propósito: sessão de visitante não deve sobreviver ao fechar o navegador.
+ */
+export async function demoLoginWithBackend(): Promise<SessionUser> {
+  const data = await backendFetch('/api/auth/demo-login', { method: 'POST' })
+  const parsed = backendLoginResponseSchema.parse(data)
+
+  await setSessionCookies({
+    accessToken: parsed.accessToken,
+    refreshToken: parsed.refreshToken,
+    remember: false
+  })
+
+  return { ...parsed.user, isDemo: true }
+}
+
+/**
  * Troca o refresh token atual por um par novo (rotação — o backend revoga o
  * token apresentado a cada uso). Devolve `false` sem lançar em qualquer
  * falha (token ausente/expirado/reuso detectado) — quem chama decide o que
@@ -82,8 +118,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   if (!accessToken) return null
 
   try {
-    const data = await backendFetch('/api/auth/token', { method: 'POST', accessToken })
-    return backendTokenResponseSchema.parse(data).user
+    return toSessionUser(await backendFetch('/api/auth/token', { method: 'POST', accessToken }))
   } catch (error) {
     if (!(error instanceof BackendApiError) || error.status !== 401) throw error
   }
@@ -94,8 +129,17 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   const newAccessToken = await getAccessToken()
   if (!newAccessToken) return null
 
-  const data = await backendFetch('/api/auth/token', { method: 'POST', accessToken: newAccessToken })
-  return backendTokenResponseSchema.parse(data).user
+  return toSessionUser(await backendFetch('/api/auth/token', { method: 'POST', accessToken: newAccessToken }))
+}
+
+/**
+ * `isDemo` chega como campo irmão de `user` na resposta do backend; o painel consome um objeto de
+ * sessão único (`SessionProvider`/`useSession`), então os dois são mesclados aqui — num lugar só,
+ * em vez de espalhar "e também leia isDemo" por cada consumidor.
+ */
+function toSessionUser(data: unknown): SessionUser {
+  const parsed = backendTokenResponseSchema.parse(data)
+  return { ...parsed.user, isDemo: parsed.isDemo }
 }
 
 /**

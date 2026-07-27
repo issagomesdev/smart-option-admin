@@ -18,7 +18,14 @@ export const sessionUserSchema = z.object({
   // verdade do catálogo; validar contra a união aqui faria o painel quebrar
   // ao invés de só ignorar uma chave nova que ele ainda não conhece.
   // `.default([])` é defesa (fail closed), o backend já sempre manda o array.
-  permissions: z.array(z.string()).default([])
+  permissions: z.array(z.string()).default([]),
+  /**
+   * Modo demonstração ativo. Não vem dentro do `user` do backend — é um campo irmão na resposta de
+   * `/api/auth/token`, mesclado aqui por `getCurrentUser` para que `SessionProvider`/`useSession`
+   * continuem carregando um objeto só. `false` por padrão: sem informação, o painel se comporta
+   * como produção.
+   */
+  isDemo: z.boolean().default(false)
 })
 
 export type SessionUser = z.infer<typeof sessionUserSchema>
@@ -41,9 +48,17 @@ export const backendRefreshResponseSchema = z.object({
 
 export type BackendRefreshResponse = z.infer<typeof backendRefreshResponseSchema>
 
-/** Resposta real de `POST {backend}/api/auth/token` (validação do access token). */
+/**
+ * Resposta real de `POST {backend}/api/auth/token` (validação do access token).
+ *
+ * `isDemo` vem do backend (`APP_DEMO`), não de uma env var do painel: manter duas fontes de verdade
+ * permitiria o painel esconder ações que o backend aceita — ou pior, exibir como disponíveis ações
+ * que o backend recusa. `.default(false)` mantém compatibilidade com um backend anterior a esta
+ * feature e falha para o lado seguro (sem badge, sem gating extra).
+ */
 export const backendTokenResponseSchema = z.object({
-  user: sessionUserSchema
+  user: sessionUserSchema,
+  isDemo: z.boolean().default(false)
 })
 
 export type BackendTokenResponse = z.infer<typeof backendTokenResponseSchema>

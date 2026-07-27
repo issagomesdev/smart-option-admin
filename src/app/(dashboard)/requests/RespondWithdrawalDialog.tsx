@@ -6,7 +6,7 @@ import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
-import { useHasPermission } from '@/components/shell/SessionContext'
+import { useHasPermission, useIsDemo } from '@/components/shell/SessionContext'
 import { StatusBadge, withdrawalStatusToBadge } from '@/components/ui/StatusBadge'
 import { toast } from '@/components/ui/toast'
 import type { WithdrawalItem } from '@/domain/dtos/requests.dto'
@@ -20,6 +20,7 @@ export interface RespondWithdrawalDialogProps {
 
 export function RespondWithdrawalDialog({ item, onClose, onDone }: RespondWithdrawalDialogProps) {
   const canApprove = useHasPermission('withdrawals.approve')
+  const isDemo = useIsDemo()
   const [observation, setObservation] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -52,7 +53,11 @@ export function RespondWithdrawalDialog({ item, onClose, onDone }: RespondWithdr
   // Um saque pendente só é "respondível" de fato se o staff tiver a
   // permissão — sem ela, a experiência é a mesma de uma solicitação já
   // respondida (só leitura), mesmo o status ainda sendo "pending" no banco.
-  const canRespond = isPending && canApprove
+  //
+  // Na demonstração vale o mesmo: aprovar dispara uma transferência PIX real na Asaas, então o
+  // backend recusa (`denyInDemo` em `POST /api/requests/res-withdrawal`) — a UI acompanha para o
+  // visitante não clicar e tomar um 403 sem contexto. O aviso abaixo explica o porquê.
+  const canRespond = isPending && canApprove && !isDemo
   const statusBadge = item ? withdrawalStatusToBadge(item.status) : null
   const errors: { description: string }[] | null = item?.errors_cause ? JSON.parse(item.errors_cause) : null
 
@@ -107,7 +112,9 @@ export function RespondWithdrawalDialog({ item, onClose, onDone }: RespondWithdr
               )}
               <Typography variant='body2'>
                 {isPending
-                  ? 'Você não tem permissão para responder a esta solicitação.'
+                  ? isDemo
+                    ? 'Esta ação está desabilitada na demonstração. Aprovar um saque dispara uma transferência PIX real.'
+                    : 'Você não tem permissão para responder a esta solicitação.'
                   : `Observação: ${item.reply_observation || 'Nenhuma observação foi incluída na resposta à solicitação.'}`}
               </Typography>
             </Stack>

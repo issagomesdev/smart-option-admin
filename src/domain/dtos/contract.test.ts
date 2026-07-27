@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import { backendFetch } from '../../infrastructure/http/backend-client'
 import { backendLoginResponseSchema } from './auth.dto'
-import { dashboardBalanceResponseSchema, dashboardUsersSchema, plansResponseSchema } from './dashboard.dto'
+import { dashboardSummarySchema, plansResponseSchema } from './dashboard.dto'
 import { networkResponseSchema } from './network.dto'
 import { extractResponseSchema, pendenciesResponseSchema, paginatedWithdrawalsSchema } from './requests.dto'
 import { botUserDetailSchema, paginatedBotUsersSchema } from './users.dto'
@@ -80,15 +80,10 @@ describe('Contrato dos DTOs vs. backend real (integração)', () => {
     networkResponseSchema.parse(data)
   })
 
-  it('dashboardUsersSchema confere com GET /api/dashboard/users', async () => {
-    const data = await backendFetch('/api/dashboard/users', { accessToken })
-    dashboardUsersSchema.parse(data)
-  })
-
-  it('dashboardBalanceResponseSchema confere com GET /api/dashboard/balance/:user_id/:product_id/:period', async () => {
-    const data = await backendFetch(`/api/dashboard/balance/${TEST_USER_ID}/all/all`, { accessToken })
-    const parsed = dashboardBalanceResponseSchema.parse(data)
-    expect(parsed).toHaveLength(3)
+  it('dashboardSummarySchema confere com GET /api/dashboard/summary', async () => {
+    const data = await backendFetch('/api/dashboard/summary?period=30d', { accessToken })
+    const parsed = dashboardSummarySchema.parse(data)
+    expect(parsed.chart.points.length).toBeGreaterThan(0)
   })
 
   it('plansResponseSchema confere com GET /api/dashboard/plans', async () => {

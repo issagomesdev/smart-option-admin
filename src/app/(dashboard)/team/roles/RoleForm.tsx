@@ -12,6 +12,7 @@ import TextField from '@mui/material/TextField'
 import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 import { Button } from '@/components/ui/Button'
+import { DemoGuard } from '@/components/ui/DemoGuard'
 import { toast } from '@/components/ui/toast'
 import { useSession } from '@/components/shell/SessionContext'
 import { PERMISSIONS, PERMISSION_LABELS } from '@/domain/permissions'
@@ -150,9 +151,11 @@ export function RoleForm({ mode, roleId, initialValues }: RoleFormProps) {
       </Grid>
 
       <Grid size={{ xs: 12 }} sx={{ display: 'flex', gap: 2 }}>
-        <Button type='submit' intent='primary' loading={isSubmitting}>
-          {mode === 'create' ? 'Cadastrar' : 'Salvar alterações'}
-        </Button>
+        <DemoGuard reason='Editar papéis está desabilitado na demonstração — alterar permissões poderia inutilizar o painel.'>
+          <Button type='submit' intent='primary' loading={isSubmitting}>
+            {mode === 'create' ? 'Cadastrar' : 'Salvar alterações'}
+          </Button>
+        </DemoGuard>
         <Button intent='ghost' onClick={() => router.push('/team/roles')}>
           Cancelar
         </Button>

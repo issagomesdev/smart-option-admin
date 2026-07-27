@@ -21,7 +21,8 @@ const BASE_USER: SessionUser = {
   surname: 'Teste',
   email: 'admin@test.local',
   roleId: 1,
-  permissions: []
+  permissions: [],
+  isDemo: false
 }
 
 function ConsumerProbe() {

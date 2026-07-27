@@ -22,7 +22,8 @@ const BASE_USER: SessionUser = {
   surname: 'Teste',
   email: 'admin@test.local',
   roleId: 1,
-  permissions: []
+  permissions: [],
+  isDemo: false
 }
 
 function renderWithTheme(ui: React.ReactElement, permissions: string[] = ['withdrawals.approve']) {
@@ -114,7 +115,10 @@ describe('WithdrawalsTable', () => {
     await userEvent.click(within(screen.getByRole('columnheader', { name: 'Valor' })).getByText('Valor'))
 
     await waitFor(() =>
-      expect(listWithdrawalsAction).toHaveBeenCalledWith('all', expect.objectContaining({ sortBy: 'value', sortDirection: 'asc' }))
+      expect(listWithdrawalsAction).toHaveBeenCalledWith(
+        'all',
+        expect.objectContaining({ sortBy: 'value', sortDirection: 'asc' })
+      )
     )
   })
 })

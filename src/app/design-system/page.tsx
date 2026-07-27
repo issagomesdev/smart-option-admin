@@ -13,6 +13,8 @@ import { Card } from '@/components/ui/Card'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { LoadingScreen } from '@/components/ui/LoadingScreen'
+import { RadialProgress } from '@/components/ui/RadialProgress'
+import { Skeleton, SkeletonCard, SkeletonLines } from '@/components/ui/Skeleton'
 import {
   StatusBadge,
   checkoutStatusToBadge,
@@ -20,8 +22,20 @@ import {
   booleanStatusToBadge
 } from '@/components/ui/StatusBadge'
 import { toast } from '@/components/ui/toast'
+import { TrendBadge } from '@/components/ui/TrendBadge'
+import { RentabilidadeChart } from '@/components/charts/RentabilidadeChart'
 import { DataTable, type DataTableColumn } from '@/components/data-table/DataTable'
 import type { CheckoutStatus, WithdrawalStatus } from '@/domain/dtos/requests.dto'
+
+const MOCK_CHART_DATA = [
+  { bucket: '2026-07-19', total: 120 },
+  { bucket: '2026-07-20', total: 180 },
+  { bucket: '2026-07-21', total: 90 },
+  { bucket: '2026-07-22', total: 240 },
+  { bucket: '2026-07-23', total: 310 },
+  { bucket: '2026-07-24', total: 200 },
+  { bucket: '2026-07-25', total: 275 }
+]
 
 const CHECKOUT_STATUSES: CheckoutStatus[] = ['PENDING', 'AUTHORIZED', 'PAID', 'IN_ANALYSIS', 'DECLINED', 'CANCELED']
 const WITHDRAWAL_STATUSES: WithdrawalStatus[] = ['pending', 'authorized', 'success', 'refused', 'failed']
@@ -143,6 +157,51 @@ export default function DesignSystemPreviewPage() {
               <StatusBadge {...booleanStatusToBadge(false)} />
             </Stack>
           </Box>
+        </Stack>
+      </Card>
+
+      <Card
+        title='TrendBadge'
+        subtitle='Variação de KPI vs. período anterior — a polaridade decide se "subir" é bom ou ruim'
+      >
+        <Stack direction='row' spacing={3} useFlexGap sx={{ flexWrap: 'wrap' }}>
+          <TrendBadge value={8.4} />
+          <TrendBadge value={-12.5} />
+          <TrendBadge value={0} />
+          <TrendBadge value={-3} format='absolute' polarity='negative-is-good' />
+          <TrendBadge value={3} format='absolute' polarity='negative-is-good' />
+        </Stack>
+      </Card>
+
+      <Card
+        title='RadialProgress'
+        subtitle='"Solicitações aprovadas hoje" — null quando não há base para calcular uma taxa'
+      >
+        <Stack direction='row' spacing={4} useFlexGap sx={{ flexWrap: 'wrap' }}>
+          <RadialProgress percent={72} label='aprovadas' />
+          <RadialProgress percent={0} label='aprovadas' />
+          <RadialProgress percent={null} label='aprovadas' />
+        </Stack>
+      </Card>
+
+      <Card
+        title='RentabilidadeChart'
+        subtitle='Linha única desenhada em SVG — crosshair no hover, navegação por seta no foco'
+      >
+        <RentabilidadeChart data={MOCK_CHART_DATA} granularity='day' />
+      </Card>
+
+      <Card
+        title='Skeleton'
+        subtitle='Placeholders de carregamento — substituem o spinner de tela cheia do dashboard antigo'
+      >
+        <Stack spacing={2}>
+          <SkeletonLines lines={2} />
+          <Stack direction='row' spacing={2}>
+            <SkeletonCard height={80} />
+            <SkeletonCard height={80} />
+          </Stack>
+          <Skeleton variant='circular' width={48} height={48} />
         </Stack>
       </Card>
 

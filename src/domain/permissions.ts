@@ -10,7 +10,8 @@ export const PERMISSIONS = [
   'withdrawals.approve',
   'support.write',
   'staff.manage',
-  'roles.manage'
+  'roles.manage',
+  'plans.manage'
 ] as const
 
 export type Permission = (typeof PERMISSIONS)[number]
@@ -22,5 +23,6 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   'withdrawals.approve': 'Aprovar ou rejeitar saques',
   'support.write': 'Marcar solicitações de suporte como concluídas',
   'staff.manage': 'Gerenciar equipe (criar, listar, editar papel, desativar staff)',
-  'roles.manage': 'Gerenciar papéis (criar, editar, excluir)'
+  'roles.manage': 'Gerenciar papéis (criar, editar, excluir)',
+  'plans.manage': 'Gerenciar planos (criar, editar, ativar/desativar, excluir)'
 }

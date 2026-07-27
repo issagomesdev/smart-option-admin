@@ -60,7 +60,10 @@ describe('NetworkTable', () => {
     await userEvent.click(within(screen.getByRole('columnheader', { name: 'Nome' })).getByText('Nome'))
 
     await waitFor(() =>
-      expect(getNetworkAction).toHaveBeenCalledWith(42, expect.objectContaining({ sortBy: 'name', sortDirection: 'asc' }))
+      expect(getNetworkAction).toHaveBeenCalledWith(
+        42,
+        expect.objectContaining({ sortBy: 'name', sortDirection: 'asc' })
+      )
     )
   })
 })
