@@ -122,7 +122,6 @@ export function TeamList() {
           <TeamRowActions
             staffId={row.id}
             staffName={`${row.name} ${row.surname}`}
-            isActive={Boolean(row.isActive)}
             isSelf={row.id === currentStaffId}
             onChanged={fetchStaff}
           />

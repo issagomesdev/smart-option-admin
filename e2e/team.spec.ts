@@ -51,7 +51,7 @@ test.describe('Equipe (CRUD, App Router)', () => {
     await expect(row.getByText('Ativo')).toBeVisible()
 
     // Reatribuir papel — staff → admin.
-    await row.getByRole('link', { name: /Editar papel de/ }).click()
+    await row.getByRole('link', { name: /^Editar / }).click()
     await page.waitForURL(/\/team\/\d+\/edit\/?$/)
     await expect(page.getByText(uniqueEmail)).toBeVisible()
     await page.getByLabel('Papel').click()
@@ -62,14 +62,17 @@ test.describe('Equipe (CRUD, App Router)', () => {
     const rowAfterReassign = page.getByRole('row', { name: new RegExp(uniqueEmail) })
     await expect(rowAfterReassign.getByText('admin', { exact: true })).toBeVisible()
 
-    // Desativar — passa pelo ConfirmDialog (não window.confirm nativo).
-    await rowAfterReassign.getByRole('button', { name: /Desativar/ }).click()
-    await expect(page.getByText('Desativar staff?')).toBeVisible()
-    await page.getByRole('button', { name: 'Desativar' }).click()
+    // Excluir — passa pelo ConfirmDialog (não window.confirm nativo).
+    await rowAfterReassign.getByRole('button', { name: /^Excluir / }).click()
+    await expect(page.getByText('Excluir colaborador?')).toBeVisible()
+    await page.getByRole('button', { name: 'Excluir', exact: true }).click()
 
-    await expect(page.getByText('Staff desativado com sucesso')).toBeVisible({ timeout: 15000 })
-    const rowAfterDeactivate = page.getByRole('row', { name: new RegExp(uniqueEmail) })
-    await expect(rowAfterDeactivate.getByText('Inativo')).toBeVisible()
-    await expect(rowAfterDeactivate.getByRole('button', { name: /Desativar/ })).not.toBeVisible()
+    await expect(page.getByText('Colaborador excluído com sucesso')).toBeVisible({ timeout: 15000 })
+    // Exclusão definitiva: a linha some da listagem, não vira "Inativo".
+    await expect(page.getByRole('row', { name: new RegExp(uniqueEmail) })).toHaveCount(0)
+
+    // O administrador principal (id 1) nunca oferece a ação de excluir.
+    const adminRow = page.getByRole('row', { name: /admin@admin.com/ })
+    await expect(adminRow.getByRole('button', { name: /^Excluir / })).toHaveCount(0)
   })
 })

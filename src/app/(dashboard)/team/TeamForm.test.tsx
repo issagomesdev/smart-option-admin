@@ -17,9 +17,12 @@ const listRolesAction = vi.fn()
 const createStaffAction = vi.fn()
 const reassignStaffRoleAction = vi.fn()
 
+const updateStaffAction = vi.fn()
+
 vi.mock('./team.actions', () => ({
   listRolesAction: (...args: unknown[]) => listRolesAction(...args),
   createStaffAction: (...args: unknown[]) => createStaffAction(...args),
+  updateStaffAction: (...args: unknown[]) => updateStaffAction(...args),
   reassignStaffRoleAction: (...args: unknown[]) => reassignStaffRoleAction(...args)
 }))
 
@@ -38,6 +41,7 @@ describe('TeamForm', () => {
     listRolesAction.mockClear()
     createStaffAction.mockClear()
     reassignStaffRoleAction.mockClear()
+    updateStaffAction.mockClear()
     listRolesAction.mockResolvedValue(ROLES)
   })
 
@@ -82,7 +86,7 @@ describe('TeamForm', () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith('/team'))
   })
 
-  it('modo edit: não mostra campos de nome/e-mail/senha, só o papel (pré-selecionado)', async () => {
+  it('modo edit: pré-preenche os dados do colaborador e deixa a senha em branco', async () => {
     const initialValues: StaffDetail = {
       id: 9,
       name: 'Existente',
@@ -95,14 +99,87 @@ describe('TeamForm', () => {
     }
     renderWithTheme(<TeamForm mode='edit' staffId={9} initialValues={initialValues} />)
 
-    expect(screen.getByText('Existente Staff')).toBeInTheDocument()
-    expect(screen.queryByLabelText('Nome')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('Senha')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Nome')).toHaveValue('Existente')
+    expect(screen.getByLabelText('Sobrenome')).toHaveValue('Staff')
+    expect(screen.getByLabelText('E-mail')).toHaveValue('existente@test.local')
+    // Em branco = manter a atual; o rótulo diz "Nova senha" só na edição.
+    expect(screen.getByLabelText('Nova senha')).toHaveValue('')
 
     await waitFor(() => expect(screen.getByLabelText('Papel')).toHaveTextContent('staff'))
   })
 
-  it('modo edit: reatribui o papel e redireciona para /team', async () => {
+  it('modo edit: sem senha preenchida, não envia o campo — a atual é mantida', async () => {
+    updateStaffAction.mockResolvedValue({ id: 9 })
+    const initialValues: StaffDetail = {
+      id: 9,
+      name: 'Existente',
+      surname: 'Staff',
+      email: 'existente@test.local',
+      roleId: 2,
+      roleName: 'staff',
+      isActive: 1,
+      createdAt: '2026-07-01T00:00:00.000Z'
+    }
+    renderWithTheme(<TeamForm mode='edit' staffId={9} initialValues={initialValues} />)
+
+    await userEvent.clear(screen.getByLabelText('Nome'))
+    await userEvent.type(screen.getByLabelText('Nome'), 'Renomeado')
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }))
+
+    await waitFor(() =>
+      expect(updateStaffAction).toHaveBeenCalledWith(9, {
+        name: 'Renomeado',
+        surname: 'Staff',
+        email: 'existente@test.local'
+      })
+    )
+    // Papel inalterado: não chama a reatribuição à toa.
+    expect(reassignStaffRoleAction).not.toHaveBeenCalled()
+  })
+
+  it('modo edit: com senha preenchida, envia a nova senha junto', async () => {
+    updateStaffAction.mockResolvedValue({ id: 9 })
+    const initialValues: StaffDetail = {
+      id: 9,
+      name: 'Existente',
+      surname: 'Staff',
+      email: 'existente@test.local',
+      roleId: 2,
+      roleName: 'staff',
+      isActive: 1,
+      createdAt: '2026-07-01T00:00:00.000Z'
+    }
+    renderWithTheme(<TeamForm mode='edit' staffId={9} initialValues={initialValues} />)
+
+    await userEvent.type(screen.getByLabelText('Nova senha'), 'senha-nova-1234')
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }))
+
+    await waitFor(() =>
+      expect(updateStaffAction).toHaveBeenCalledWith(9, expect.objectContaining({ password: 'senha-nova-1234' }))
+    )
+  })
+
+  it('modo edit: senha com menos de 8 caracteres bloqueia o envio', async () => {
+    const initialValues: StaffDetail = {
+      id: 9,
+      name: 'Existente',
+      surname: 'Staff',
+      email: 'existente@test.local',
+      roleId: 2,
+      roleName: 'staff',
+      isActive: 1,
+      createdAt: '2026-07-01T00:00:00.000Z'
+    }
+    renderWithTheme(<TeamForm mode='edit' staffId={9} initialValues={initialValues} />)
+
+    await userEvent.type(screen.getByLabelText('Nova senha'), 'curta')
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }))
+
+    await waitFor(() => expect(updateStaffAction).not.toHaveBeenCalled())
+  })
+
+  it('modo edit: ao trocar o papel, reatribui além de salvar os dados, e redireciona para /team', async () => {
+    updateStaffAction.mockResolvedValue({ id: 9 })
     reassignStaffRoleAction.mockResolvedValue({ id: 9 })
     const initialValues: StaffDetail = {
       id: 9,

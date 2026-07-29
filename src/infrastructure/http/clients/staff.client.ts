@@ -3,6 +3,7 @@ import {
   staffActionResultSchema,
   staffDetailSchema,
   type CreateStaffInput,
+  type UpdateStaffInput,
   type StaffFilters
 } from '@/domain/dtos/staff.dto'
 import { authorizedFetch } from '../session'
@@ -29,12 +30,17 @@ export async function createStaff(input: CreateStaffInput) {
   return staffDetailSchema.parse(data)
 }
 
+export async function updateStaff(id: number, input: UpdateStaffInput) {
+  const data = await authorizedFetch(`/api/staff/${id}`, { method: 'PATCH', body: input })
+  return staffDetailSchema.parse(data)
+}
+
 export async function reassignStaffRole(id: number, roleId: number) {
   const data = await authorizedFetch(`/api/staff/${id}/role`, { method: 'PATCH', body: { roleId } })
   return staffDetailSchema.parse(data)
 }
 
-export async function deactivateStaff(id: number) {
+export async function deleteStaff(id: number) {
   const data = await authorizedFetch(`/api/staff/${id}`, { method: 'DELETE' })
   return staffActionResultSchema.parse(data)
 }

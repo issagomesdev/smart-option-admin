@@ -5,10 +5,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { theme } from '@/theme/theme'
 import { TeamRowActions } from './TeamRowActions'
 
-const deactivateStaffAction = vi.fn()
+const deleteStaffAction = vi.fn()
 
 vi.mock('./team.actions', () => ({
-  deactivateStaffAction: (...args: unknown[]) => deactivateStaffAction(...args)
+  deleteStaffAction: (...args: unknown[]) => deleteStaffAction(...args)
 }))
 
 function renderWithTheme(ui: React.ReactElement) {
@@ -17,47 +17,53 @@ function renderWithTheme(ui: React.ReactElement) {
 
 describe('TeamRowActions', () => {
   beforeEach(() => {
-    deactivateStaffAction.mockClear()
+    deleteStaffAction.mockClear()
   })
 
-  it('sempre mostra "Editar papel"', () => {
-    renderWithTheme(<TeamRowActions staffId={7} staffName='Fulano' isActive isSelf={false} onChanged={vi.fn()} />)
+  it('sempre mostra "Editar"', () => {
+    renderWithTheme(<TeamRowActions staffId={7} staffName='Fulano' isSelf={false} onChanged={vi.fn()} />)
 
-    expect(screen.getByRole('link', { name: 'Editar papel de Fulano' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Editar Fulano' })).toBeInTheDocument()
   })
 
-  it('mostra "Desativar" quando ativo e não é o próprio staff logado', () => {
-    renderWithTheme(<TeamRowActions staffId={7} staffName='Fulano' isActive isSelf={false} onChanged={vi.fn()} />)
+  it('mostra "Excluir" para qualquer colaborador que não seja o próprio staff logado', () => {
+    renderWithTheme(<TeamRowActions staffId={7} staffName='Fulano' isSelf={false} onChanged={vi.fn()} />)
 
-    expect(screen.getByRole('button', { name: 'Desativar Fulano' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Excluir Fulano' })).toBeInTheDocument()
   })
 
-  it('esconde "Desativar" quando é o próprio staff logado (evita um 403 garantido)', () => {
-    renderWithTheme(<TeamRowActions staffId={7} staffName='Fulano' isActive isSelf onChanged={vi.fn()} />)
+  it('mostra "Excluir" mesmo para um colaborador já inativo — é justamente o caso de limpar a lista', () => {
+    renderWithTheme(<TeamRowActions staffId={7} staffName='Fulano' isSelf={false} onChanged={vi.fn()} />)
 
-    expect(screen.queryByRole('button', { name: 'Desativar Fulano' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Excluir Fulano' })).toBeInTheDocument()
   })
 
-  it('esconde "Desativar" quando o staff já está inativo', () => {
-    renderWithTheme(
-      <TeamRowActions staffId={7} staffName='Fulano' isActive={false} isSelf={false} onChanged={vi.fn()} />
-    )
+  it('esconde "Excluir" quando é o próprio staff logado (evita um 403 garantido)', () => {
+    renderWithTheme(<TeamRowActions staffId={7} staffName='Fulano' isSelf onChanged={vi.fn()} />)
 
-    expect(screen.queryByRole('button', { name: 'Desativar Fulano' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Excluir Fulano' })).not.toBeInTheDocument()
   })
 
-  it('"Desativar" abre o ConfirmDialog e só chama a action ao confirmar', async () => {
+  it('esconde "Excluir" para o administrador principal (id 1), mesmo com outro staff logado', () => {
+    renderWithTheme(<TeamRowActions staffId={1} staffName='sr admin' isSelf={false} onChanged={vi.fn()} />)
+
+    expect(screen.queryByRole('button', { name: 'Excluir sr admin' })).not.toBeInTheDocument()
+    // A edição continua disponível — só a exclusão é bloqueada.
+    expect(screen.getByRole('link', { name: 'Editar sr admin' })).toBeInTheDocument()
+  })
+
+  it('"Excluir" abre o ConfirmDialog e só chama a action ao confirmar', async () => {
     const onChanged = vi.fn()
-    deactivateStaffAction.mockResolvedValue(undefined)
-    renderWithTheme(<TeamRowActions staffId={7} staffName='Fulano' isActive isSelf={false} onChanged={onChanged} />)
+    deleteStaffAction.mockResolvedValue(undefined)
+    renderWithTheme(<TeamRowActions staffId={7} staffName='Fulano' isSelf={false} onChanged={onChanged} />)
 
-    await userEvent.click(screen.getByRole('button', { name: 'Desativar Fulano' }))
-    expect(screen.getByText('Desativar staff?')).toBeInTheDocument()
-    expect(deactivateStaffAction).not.toHaveBeenCalled()
+    await userEvent.click(screen.getByRole('button', { name: 'Excluir Fulano' }))
+    expect(screen.getByText('Excluir colaborador?')).toBeInTheDocument()
+    expect(deleteStaffAction).not.toHaveBeenCalled()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Desativar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Excluir' }))
 
-    await waitFor(() => expect(deactivateStaffAction).toHaveBeenCalledWith(7))
+    await waitFor(() => expect(deleteStaffAction).toHaveBeenCalledWith(7))
     await waitFor(() => expect(onChanged).toHaveBeenCalled())
   })
 })

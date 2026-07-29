@@ -72,15 +72,24 @@ O painel centraliza os principais indicadores da plataforma em uma única visão
 
 ---
 
-### 🔍 Auditoria Financeira
+### 🔍 Auditoria
 
-Todas as movimentações financeiras da plataforma ficam centralizadas em uma única tela de auditoria.
+Duas trilhas complementares na mesma tela, organizadas em abas.
+
+**Movimentações** — todas as movimentações financeiras da plataforma.
 
 - Histórico completo de depósitos, saques, rendimentos, comissões, adesões, ajustes administrativos e demais transações.
 - Busca avançada com filtros combináveis por período, usuário, tipo, status, valores e pesquisa textual.
 - Ordenação, paginação server-side e visualização detalhada de cada movimentação.
 - Informações completas da operação, incluindo usuário, identificadores, gateway, administrador responsável, datas e observações.
 - Exportação dos resultados filtrados.
+
+**Ações administrativas** — quem alterou o quê no painel.
+
+- Registro de cada alteração de equipe, papéis, usuários do bot, bloqueios, ajustes de saldo, respostas a saques e conclusões de suporte.
+- Autor, horário e o estado antes e depois de cada mudança, com detalhamento por registro.
+- Filtros por período, área, tipo de ação e busca por autor ou registro, com exportação.
+- O e-mail do autor é preservado mesmo que a conta dele seja removida depois.
 
 ---
 
@@ -120,7 +129,7 @@ Centralização das solicitações operacionais da plataforma.
 
 Ferramentas para gerenciamento do ambiente administrativo.
 
-- Gerenciamento da equipe administrativa.
+- Gestão da equipe administrativa, incluindo alteração de nome, e-mail e redefinição de senha dos colaboradores.
 - Controle de papéis e permissões (**RBAC**).
 - Configuração do perfil do administrador autenticado.
 - Alteração de credenciais e preferências da conta.
@@ -207,13 +216,13 @@ Central de monitoramento da plataforma.
 
 ---
 
-### 🔍 Auditoria Financeira
+### 🔍 Auditoria
 
-Consulta e rastreamento das movimentações financeiras.
+Consulta e rastreamento das movimentações financeiras e das ações administrativas.
 
 | Rota | Descrição |
 |---|---|
-| `/audit` | Histórico completo de movimentações financeiras, com filtros avançados, ordenação, detalhes da operação e exportação dos resultados. |
+| `/audit` | Auditoria em duas abas: movimentações financeiras e ações administrativas, ambas com filtros avançados, detalhamento por registro e exportação. |
 
 ---
 
@@ -261,7 +270,7 @@ Gerenciamento da equipe administrativa e das permissões de acesso.
 |---|---|
 | `/team` | Listagem e gerenciamento da equipe administrativa. |
 | `/team/create` | Cadastro de novos colaboradores. |
-| `/team/[id]/edit` | Edição de colaboradores. |
+| `/team/[id]/edit` | Edição de colaboradores: nome, sobrenome, e-mail, senha e papel. |
 | `/team/roles` | Gerenciamento de papéis e permissões (RBAC). |
 | `/team/roles/create` | Cadastro de novos papéis. |
 | `/team/roles/[id]/edit` | Edição de papéis e permissões. |

@@ -43,10 +43,10 @@ test.describe('Dashboard (App Router, agregador v2)', () => {
     await expect(page.getByText('Solicitações aprovadas hoje')).toBeVisible()
     await expect(page.getByText('Movimentações recentes')).toBeVisible()
 
-    // "Ver todas" leva para a nova Auditoria Financeira.
+    // "Ver todas" leva para a Auditoria.
     await page.getByRole('link', { name: 'Ver todas' }).click()
     await page.waitForURL(/\/audit\/?$/)
-    await expect(page.getByRole('heading', { name: 'Auditoria Financeira' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Auditoria' })).toBeVisible()
     await page.goBack()
     await page.waitForURL('/')
 
@@ -54,7 +54,7 @@ test.describe('Dashboard (App Router, agregador v2)', () => {
     await expect(page.getByRole('link', { name: 'Dashboard' })).toBeVisible()
     await expect(page.getByRole('link', { name: 'Usuários' })).toBeVisible()
     await expect(page.getByRole('link', { name: 'Solicitações' })).toBeVisible()
-    await expect(page.getByRole('link', { name: 'Auditoria Financeira' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Auditoria' })).toBeVisible()
 
     // Logout via menu do usuário.
     await page.getByRole('button', { name: 'Menu do usuário' }).click()

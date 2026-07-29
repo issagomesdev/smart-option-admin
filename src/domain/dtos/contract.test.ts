@@ -11,15 +11,15 @@ import { botUserDetailSchema, paginatedBotUsersSchema } from './users.dto'
  * plano aprovado para a Fase 2): chama `backendFetch` direto (sem passar
  * pelos cookies httpOnly — isso é coberto à parte pelos testes E2E de
  * `e2e/auth.spec.ts`) e confirma que a resposta de verdade do backend passa
- * pelo `.parse()` de cada schema sem lançar. Usa o usuário de teste `id=284`
- * (`telegram_user_id` nulo) para não esbarrar num problema pré-existente e
- * não relacionado a esta fase: linhas com `telegram_user_id` de teste
- * inválido fazem `UsersService.botUsers` chamar a API do Telegram de
- * verdade e falhar (`ETELEGRAM: 400 chat not found`) — dado sujo do
- * ambiente de dev, não um bug do client novo.
+ * pelo  de cada schema sem lançar.
+ *
+ * O usuário usado nas chamadas por id é resolvido em tempo de execução, a partir da própria
+ * listagem — antes era um id fixo do banco de desenvolvimento, o que fazia a suíte inteira quebrar
+ * sempre que os dados eram regenerados (`npm run demo:seed`). O objetivo aqui é validar o formato
+ * da resposta, não a existência de um registro específico.
  */
 describe('Contrato dos DTOs vs. backend real (integração)', () => {
-  const TEST_USER_ID = 284
+  let testUserId: number
   let accessToken: string
 
   beforeAll(async () => {
@@ -28,39 +28,46 @@ describe('Contrato dos DTOs vs. backend real (integração)', () => {
       body: { email: 'admin@admin.com', password: 'password' }
     })
     accessToken = backendLoginResponseSchema.parse(data).accessToken
+
+    const users = await backendFetch('/api/users/users-bot', {
+      method: 'POST',
+      accessToken,
+      body: { page: 1, limit: 1 }
+    })
+    testUserId = paginatedBotUsersSchema.parse(users).data[0].id
   })
 
   it('paginatedBotUsersSchema confere com POST /api/users/users-bot', async () => {
     const data = await backendFetch('/api/users/users-bot', {
       method: 'POST',
       accessToken,
-      body: { page: 1, limit: 10, name: 'hayssa maria' }
+      body: { page: 1, limit: 10 }
     })
 
     const parsed = paginatedBotUsersSchema.parse(data)
-    expect(parsed.data).toHaveLength(1)
-    expect(parsed.data[0]).toMatchObject({ id: TEST_USER_ID, name: 'hayssa maria' })
+    expect(parsed.data.length).toBeGreaterThan(0)
+    expect(parsed.pagination.page).toBe(1)
   })
 
   it('botUserDetailSchema confere com GET /api/users/user-bot/:id', async () => {
-    const data = await backendFetch(`/api/users/user-bot/${TEST_USER_ID}`, { accessToken })
+    const data = await backendFetch(`/api/users/user-bot/${testUserId}`, { accessToken })
     const parsed = botUserDetailSchema.parse(data)
-    expect(parsed.id).toBe(TEST_USER_ID)
+    expect(parsed.id).toBe(testUserId)
   })
 
   it('paginatedWithdrawalsSchema confere com POST /api/requests/withdrawal/:id (página vazia)', async () => {
-    const data = await backendFetch(`/api/requests/withdrawal/${TEST_USER_ID}`, {
+    const data = await backendFetch(`/api/requests/withdrawal/${testUserId}`, {
       method: 'POST',
       accessToken,
       body: { page: 1, limit: 5 }
     })
 
     const parsed = paginatedWithdrawalsSchema.parse(data)
-    expect(parsed.pagination).toEqual({ page: 1, limit: 5, total: 0, totalPages: 1 })
+    expect(parsed.pagination).toMatchObject({ page: 1, limit: 5 })
   })
 
   it('extractResponseSchema confere com POST /api/requests/extract/:id', async () => {
-    const data = await backendFetch(`/api/requests/extract/${TEST_USER_ID}`, { method: 'POST', accessToken, body: {} })
+    const data = await backendFetch(`/api/requests/extract/${testUserId}`, { method: 'POST', accessToken, body: {} })
     const parsed = extractResponseSchema.parse(data)
     expect(parsed.balance).toBeGreaterThanOrEqual(0)
   })
@@ -72,7 +79,7 @@ describe('Contrato dos DTOs vs. backend real (integração)', () => {
   })
 
   it('networkResponseSchema confere com POST /api/network/:id', async () => {
-    const data = await backendFetch(`/api/network/${TEST_USER_ID}`, {
+    const data = await backendFetch(`/api/network/${testUserId}`, {
       method: 'POST',
       accessToken,
       body: { page: 1, limit: 5 }

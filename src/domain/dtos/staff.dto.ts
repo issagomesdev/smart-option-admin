@@ -39,6 +39,23 @@ export const createStaffInputSchema = z.object({
 
 export type CreateStaffInput = z.infer<typeof createStaffInputSchema>
 
+/**
+ * `PATCH /api/staff/:id` — os mesmos campos que o staff altera em Configurações da conta, agora
+ * também editáveis por quem tem `staff.manage`.
+ *
+ * `password` é opcional: em branco significa "manter a senha atual". O backend não pede a senha
+ * atual aqui (quem gerencia a equipe não a conhece); a proteção é que só se pode editar um staff
+ * cujas permissões sejam um subconjunto das de quem edita.
+ */
+export const updateStaffInputSchema = z.object({
+  name: z.string().min(1).max(255),
+  surname: z.string().min(1).max(255),
+  email: z.email(),
+  password: z.string().min(8, 'A senha deve ter pelo menos 8 caracteres').optional()
+})
+
+export type UpdateStaffInput = z.infer<typeof updateStaffInputSchema>
+
 export const staffDetailSchema = staffListItemSchema
 export type StaffDetail = StaffListItem
 

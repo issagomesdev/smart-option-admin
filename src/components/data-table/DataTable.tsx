@@ -223,11 +223,16 @@ export function DataTable<T>({
                   )}
                 </TableCell>
               ))}
+              {/* Cabeçalho visível e alinhado à direita, igual às células de
+                  ação abaixo. `width: '1px'` + `nowrap` é o idiom de coluna que
+                  encolhe até o conteúdo: a tabela não reserva espaço a mais e os
+                  botões ficam sob o rótulo. (Antes isto era um rótulo só para
+                  leitor de tela, mas `width: 1`/`height: 1` no `sx` passa pelo
+                  sistema de sizing do MUI e vira `100%`, então o texto escapava
+                  para fora da célula e estourava a largura da tabela.) */}
               {hasRowActions && (
-                <TableCell align='right' sx={{ width: 64 }}>
-                  <Box component='span' sx={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden' }}>
-                    Ações
-                  </Box>
+                <TableCell align='right' sx={{ width: '1px', whiteSpace: 'nowrap' }}>
+                  Ações
                 </TableCell>
               )}
             </TableRow>
@@ -254,7 +259,7 @@ export function DataTable<T>({
                     </TableCell>
                   ))}
                   {hasRowActions && (
-                    <TableCell align='right'>
+                    <TableCell align='right' sx={{ width: '1px', whiteSpace: 'nowrap' }}>
                       <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>{rowActions?.(row)}</Box>
                     </TableCell>
                   )}

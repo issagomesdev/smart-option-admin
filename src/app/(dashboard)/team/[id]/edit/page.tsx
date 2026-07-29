@@ -6,7 +6,7 @@ import { getCurrentUser } from '@/infrastructure/http/session'
 import { getStaffAction } from '../../team.actions'
 import { TeamForm } from '../../TeamForm'
 
-export const metadata: Metadata = { title: 'Editar papel do staff' }
+export const metadata: Metadata = { title: 'Editar colaborador do staff' }
 
 export default async function EditStaffPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser()
@@ -24,7 +24,7 @@ export default async function EditStaffPage({ params }: { params: Promise<{ id: 
   if (!staff) notFound()
 
   return (
-    <Card title={`Editar papel — ${staff.name} ${staff.surname}`} titleComponent='h1'>
+    <Card title={`Editar colaborador — ${staff.name} ${staff.surname}`} titleComponent='h1'>
       <TeamForm mode='edit' staffId={staffId} initialValues={staff} />
     </Card>
   )

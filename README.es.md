@@ -72,15 +72,24 @@ El panel reúne los principales indicadores de la plataforma en una única vista
 
 ---
 
-### 🔍 Auditoría Financiera
+### 🔍 Auditoría
 
-Todos los movimientos financieros de la plataforma se concentran en una única pantalla de auditoría.
+Dos rastros complementarios en la misma pantalla, organizados en pestañas.
+
+**Movimientos** — todos los movimientos financieros de la plataforma.
 
 - Historial completo de depósitos, retiros, rendimientos, comisiones, suscripciones, ajustes administrativos y demás transacciones.
 - Búsqueda avanzada con filtros combinables por período, usuario, tipo, estado, rango de montos y búsqueda por texto.
 - Ordenamiento, paginación del lado del servidor y vista detallada de cada movimiento.
 - Información completa de la operación, incluyendo usuario, identificadores, gateway, administrador responsable, fechas y observaciones.
 - Exportación de los resultados filtrados.
+
+**Acciones administrativas** — quién modificó qué en el panel.
+
+- Registro de cada cambio en el equipo, los roles, los usuarios del bot, los bloqueos, los ajustes de saldo, las respuestas a retiros y los cierres de soporte.
+- Autor, fecha y hora, y el estado antes y después de cada cambio, con detalle por registro.
+- Filtros por período, área y tipo de acción, además de búsqueda por autor o registro, con exportación.
+- El correo del autor se conserva aunque su cuenta se elimine después.
 
 ---
 
@@ -120,7 +129,7 @@ Un solo lugar para las solicitudes operativas de la plataforma.
 
 Herramientas para gestionar el propio entorno administrativo.
 
-- Gestión del equipo administrativo.
+- Gestión del equipo administrativo, incluyendo la edición de nombre y correo y el restablecimiento de la contraseña de los colaboradores.
 - Control de roles y permisos (**RBAC**).
 - Configuración del perfil del administrador autenticado.
 - Cambio de credenciales y preferencias de la cuenta.
@@ -207,13 +216,13 @@ Centro de monitoreo de la plataforma.
 
 ---
 
-### 🔍 Auditoría Financiera
+### 🔍 Auditoría
 
-Consulta y trazabilidad de los movimientos financieros.
+Consulta y trazabilidad de los movimientos financieros y de las acciones administrativas.
 
 | Ruta | Descripción |
 |---|---|
-| `/audit` | Historial completo de movimientos financieros, con filtros avanzados, ordenamiento, detalle de la operación y exportación de resultados. |
+| `/audit` | Auditoría en dos pestañas: movimientos financieros y acciones administrativas, ambas con filtros avanzados, detalle por registro y exportación. |
 
 ---
 
@@ -261,7 +270,7 @@ Gestión del equipo administrativo y de los permisos de acceso.
 |---|---|
 | `/team` | Listado y gestión del equipo administrativo. |
 | `/team/create` | Alta de nuevos colaboradores. |
-| `/team/[id]/edit` | Edición de colaboradores. |
+| `/team/[id]/edit` | Edición de colaboradores: nombre, apellido, correo, contraseña y rol. |
 | `/team/roles` | Gestión de roles y permisos (RBAC). |
 | `/team/roles/create` | Alta de nuevos roles. |
 | `/team/roles/[id]/edit` | Edición de roles y permisos. |

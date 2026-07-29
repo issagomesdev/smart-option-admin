@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ThemeProvider } from '@mui/material/styles'
 import { describe, expect, it, vi } from 'vitest'
@@ -9,18 +9,18 @@ import type { PaginatedStaff } from '@/domain/dtos/staff.dto'
 import { TeamList } from './TeamList'
 
 const listStaffAction = vi.fn()
-const deactivateStaffAction = vi.fn()
+const deleteStaffAction = vi.fn()
 
 vi.mock('./team.actions', () => ({
   listStaffAction: (...args: unknown[]) => listStaffAction(...args),
-  deactivateStaffAction: (...args: unknown[]) => deactivateStaffAction(...args)
+  deleteStaffAction: (...args: unknown[]) => deleteStaffAction(...args)
 }))
 
 const CURRENT_USER: SessionUser = {
-  id: 1,
-  name: 'Admin',
-  surname: 'Teste',
-  email: 'admin@test.local',
+  id: 8,
+  name: 'Novo',
+  surname: 'Staff',
+  email: 'novo-staff@test.local',
   roleId: 1,
   permissions: ['staff.manage'],
   isDemo: false
@@ -57,9 +57,19 @@ const RESULT: PaginatedStaff = {
       roleName: 'staff',
       isActive: 1,
       createdAt: '2026-07-10T00:00:00.000Z'
+    },
+    {
+      id: 12,
+      name: 'Outro',
+      surname: 'Colaborador',
+      email: 'outro@test.local',
+      roleId: 2,
+      roleName: 'staff',
+      isActive: 1,
+      createdAt: '2026-07-12T00:00:00.000Z'
     }
   ],
-  pagination: { page: 1, limit: 20, total: 2, totalPages: 1 }
+  pagination: { page: 1, limit: 20, total: 3, totalPages: 1 }
 }
 
 describe('TeamList', () => {
@@ -68,18 +78,23 @@ describe('TeamList', () => {
     renderWithSession()
 
     expect(await screen.findByText('Novo Staff')).toBeInTheDocument()
-    expect(screen.getByText('novo-staff@test.local')).toBeInTheDocument()
-    expect(screen.getByText('staff')).toBeInTheDocument()
+    // Escopado à linha: mais de um colaborador tem o papel 'staff' na fixture.
+    const row = screen.getByRole('row', { name: /novo-staff@test.local/ })
+    expect(within(row).getByText('novo-staff@test.local')).toBeInTheDocument()
+    expect(within(row).getByText('staff')).toBeInTheDocument()
   })
 
-  it('esconde "Desativar" só na linha do staff logado, mostra nas demais', async () => {
+  it('esconde "Excluir" no administrador principal e na linha do staff logado, mostra nas demais', async () => {
     listStaffAction.mockResolvedValue(RESULT)
     renderWithSession()
 
-    await screen.findByText('Novo Staff')
+    await screen.findByText('Outro Colaborador')
 
-    expect(screen.queryByRole('button', { name: /Desativar Admin Teste/ })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Desativar Novo Staff' })).toBeInTheDocument()
+    // id 1: protegido incondicionalmente, mesmo não sendo o usuário logado.
+    expect(screen.queryByRole('button', { name: /Excluir Admin Teste/ })).not.toBeInTheDocument()
+    // Próprio logado (id 8): o backend recusa auto-exclusão.
+    expect(screen.queryByRole('button', { name: /Excluir Novo Staff/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Excluir Outro Colaborador' })).toBeInTheDocument()
   })
 
   it('mostra o botão "Novo staff" apontando para /team/create', async () => {

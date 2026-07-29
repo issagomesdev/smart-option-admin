@@ -13,6 +13,13 @@ export default defineConfig({
     environment: 'jsdom',
     globals: false,
     setupFiles: ['./vitest.setup.ts'],
+    // Os 5s padrão do Vitest não bastam aqui: `userEvent.type` digita caractere a caractere, e um
+    // formulário com vários campos gasta segundos só nisso. Com os workers competindo por CPU, os
+    // testes de formulário estouravam o limite de forma intermitente — o conjunto que falhava
+    // mudava a cada execução, e todos passavam quando rodados isoladamente. É o mesmo ajuste que o
+    // backend já faz (lá por causa das idas ao banco), pela mesma razão: o limite media contenção
+    // de máquina, não lentidão do código.
+    testTimeout: 20000,
     include: ['src/**/*.test.{ts,tsx}'],
     exclude: ['**/node_modules/**', '**/e2e/**'],
     env: {

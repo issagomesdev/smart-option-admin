@@ -5,12 +5,12 @@ const PORT = 3001
 const STORAGE_STATE = path.join(__dirname, '.auth-state.audit.json')
 
 /**
- * Cobertura E2E da Auditoria Financeira (Fase 7) — histórico completo e
+ * Cobertura E2E da Auditoria — histórico completo e
  * filtrável das 3 fontes de movimentação unidas (`AuditService.list`). Só
  * leitura/navegação, mesmo espírito de `requests.spec.ts`: confirma que a
  * tela carrega dados reais, filtra, ordena e abre o detalhe sem erro.
  */
-test.describe('Auditoria Financeira (App Router)', () => {
+test.describe('Auditoria (App Router)', () => {
   test.describe.configure({ mode: 'serial' })
 
   test.beforeAll(async () => {
@@ -28,10 +28,10 @@ test.describe('Auditoria Financeira (App Router)', () => {
     page.on('pageerror', error => consoleErrors.push(error.message))
 
     await page.goto('/')
-    await page.getByRole('link', { name: 'Auditoria Financeira' }).click()
+    await page.getByRole('link', { name: 'Auditoria' }).click()
     await page.waitForURL(/\/audit\/?$/)
 
-    await expect(page.getByRole('heading', { name: 'Auditoria Financeira' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Auditoria' })).toBeVisible()
     await expect(page.getByRole('columnheader', { name: 'Valor' })).toBeVisible()
     await expect(page.getByRole('button', { name: /Exportar/ })).toBeVisible()
 

@@ -44,7 +44,7 @@ const NAV_ITEMS: { label: string; href: string; icon: typeof HomeCircleOutline; 
   { label: 'Dashboard', href: '/', icon: HomeCircleOutline },
   { label: 'Usuários', href: '/users', icon: AccountGroup },
   { label: 'Solicitações', href: '/requests', icon: BriefcaseVariant },
-  { label: 'Auditoria Financeira', href: '/audit', icon: FileDocumentOutline },
+  { label: 'Auditoria', href: '/audit', icon: FileDocumentOutline },
   { label: 'Planos', href: '/plans', icon: PackageVariantClosed, permission: 'plans.manage' },
   { label: 'Equipe', href: '/team', icon: AccountSupervisorOutline, permission: 'staff.manage' }
 ]

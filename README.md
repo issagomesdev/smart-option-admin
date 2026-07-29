@@ -72,15 +72,24 @@ The panel brings the platform's key metrics together into a single operational v
 
 ---
 
-### 🔍 Financial Audit
+### 🔍 Audit
 
-Every financial transaction on the platform lives in a single audit screen.
+Two complementary trails on the same screen, split into tabs.
+
+**Transactions** — every financial transaction on the platform.
 
 - Complete history of deposits, withdrawals, earnings, commissions, subscriptions, manual adjustments, and other transactions.
 - Advanced search with combinable filters by period, user, type, status, amount range, and free-text search.
 - Sorting, server-side pagination, and a detailed view for each transaction.
 - Full operation details, including user, identifiers, gateway, responsible admin, timestamps, and notes.
 - Export of the filtered results.
+
+**Administrative actions** — who changed what in the panel.
+
+- A record of every change to the team, roles, bot users, blocks, balance adjustments, withdrawal responses, and support resolutions.
+- Author, timestamp, and the state before and after each change, with a detailed view for every entry.
+- Filters by period, area, and action type, plus search by author or record — with export.
+- The author's email is preserved even if their account is removed later.
 
 ---
 
@@ -120,7 +129,7 @@ A single place for the platform's operational requests.
 
 Tools for managing the admin environment itself.
 
-- Admin team management.
+- Admin team management, including editing a team member's name, email, and resetting their password.
 - Roles and permissions control (**RBAC**).
 - Profile settings for the signed-in admin.
 - Credential and account preference changes.
@@ -207,13 +216,13 @@ The platform's monitoring hub.
 
 ---
 
-### 🔍 Financial Audit
+### 🔍 Audit
 
-Search and tracing of financial transactions.
+Search and tracing of financial transactions and administrative actions.
 
 | Route | Description |
 |---|---|
-| `/audit` | Complete transaction history, with advanced filters, sorting, operation details, and result export. |
+| `/audit` | Audit split into two tabs — financial transactions and administrative actions — both with advanced filters, per-record details, and export. |
 
 ---
 
@@ -261,7 +270,7 @@ Management of the admin team and access permissions.
 |---|---|
 | `/team` | Admin team listing and management. |
 | `/team/create` | Add a new team member. |
-| `/team/[id]/edit` | Edit a team member. |
+| `/team/[id]/edit` | Edit a team member: name, surname, email, password, and role. |
 | `/team/roles` | Roles and permissions management (RBAC). |
 | `/team/roles/create` | Create a new role. |
 | `/team/roles/[id]/edit` | Edit roles and permissions. |

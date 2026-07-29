@@ -11,13 +11,12 @@ import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import TextField from '@mui/material/TextField'
-import Typography from '@mui/material/Typography'
 import { Button } from '@/components/ui/Button'
 import { DemoGuard } from '@/components/ui/DemoGuard'
 import { toast } from '@/components/ui/toast'
 import type { Role } from '@/domain/dtos/roles.dto'
 import type { StaffDetail } from '@/domain/dtos/staff.dto'
-import { createStaffAction, listRolesAction, reassignStaffRoleAction } from './team.actions'
+import { createStaffAction, listRolesAction, reassignStaffRoleAction, updateStaffAction } from './team.actions'
 
 const teamFormSchema = z.object({
   name: z.string().min(1, 'Campo obrigatório').max(255).optional(),
@@ -36,14 +35,17 @@ export interface TeamFormProps {
 }
 
 /**
- * Um só componente para os dois modos, mesmo padrão de `UserForm` — os
- * campos que só existem no modo `create` (nome/sobrenome/e-mail/senha) são
- * opcionais no schema e validados à mão no `onSubmit`, não escondidos atrás
- * de um segundo schema. No modo `edit`, só o papel é editável: nome/
- * sobrenome/e-mail de outro staff não podem ser alterados por aqui —
- * "editar-papel" é literalmente o que `staff.manage` cobre (decisão de
- * design da Fase 5 parte 3); o próprio staff muda os seus em Configurações
- * da conta.
+ * Um só componente para os dois modos, mesmo padrão de `UserForm` — os campos são opcionais no
+ * schema e validados à mão no `onSubmit`, em vez de um segundo schema.
+ *
+ * Nos dois modos, nome/sobrenome/e-mail são editáveis por quem tem `staff.manage`. A senha é
+ * obrigatória ao criar e opcional ao editar: em branco, mantém a atual. O próprio staff continua
+ * podendo alterar os mesmos dados em Configurações da conta — lá a troca de senha exige a senha
+ * atual, aqui não, porque quem gerencia a equipe não a conhece.
+ *
+ * Qualquer portador de `staff.manage` pode editar qualquer colaborador, inclusive um com mais
+ * permissões. A contenção dessa decisão é a trilha de auditoria: toda edição fica registrada com
+ * autor, horário e o antes/depois, visível em Auditoria > Ações administrativas.
  */
 export function TeamForm({ mode, staffId, initialValues }: TeamFormProps) {
   const router = useRouter()
@@ -55,16 +57,14 @@ export function TeamForm({ mode, staffId, initialValues }: TeamFormProps) {
     formState: { errors, isSubmitting }
   } = useForm<TeamFormValues>({
     resolver: zodResolver(teamFormSchema),
-    // No modo `edit`, nome/sobrenome/e-mail/senha ficam `undefined` (não `''`)
-    // de propósito: são campos `.optional()` no schema, mas uma string vazia
-    // ainda é validada contra o `.min(1)` interno — só `undefined` conta como
-    // "ausente" para o zod. Sem isso, o submit falharia a validação mesmo
-    // sem esses campos aparecerem no formulário.
+    // A senha fica `''` nos dois modos: é `.optional()` no schema, mas uma string vazia ainda seria
+    // validada contra o `.min(1)` interno se o campo tivesse um — como não tem, `''` é seguro e
+    // permite distinguir "não quis trocar" de uma senha de verdade no `onSubmit`.
     defaultValues: {
-      name: mode === 'create' ? '' : undefined,
-      surname: mode === 'create' ? '' : undefined,
-      email: mode === 'create' ? '' : undefined,
-      password: mode === 'create' ? '' : undefined,
+      name: initialValues?.name ?? '',
+      surname: initialValues?.surname ?? '',
+      email: initialValues?.email ?? '',
+      password: '',
       roleId: initialValues ? String(initialValues.roleId) : ''
     }
   })
@@ -76,12 +76,13 @@ export function TeamForm({ mode, staffId, initialValues }: TeamFormProps) {
   }, [])
 
   async function onSubmit(values: TeamFormValues) {
+    if (!values.name || !values.surname || !values.email) {
+      toast.error('Nome, sobrenome e e-mail são obrigatórios.')
+      return
+    }
+
     try {
       if (mode === 'create') {
-        if (!values.name || !values.surname || !values.email) {
-          toast.error('Nome, sobrenome e e-mail são obrigatórios.')
-          return
-        }
         if (!values.password || values.password.length < 8) {
           toast.error('A senha é obrigatória e deve ter pelo menos 8 caracteres.')
           return
@@ -94,93 +95,105 @@ export function TeamForm({ mode, staffId, initialValues }: TeamFormProps) {
           password: values.password,
           roleId: Number(values.roleId)
         })
-        toast.success('Staff cadastrado com sucesso')
+        toast.success('Colaborador cadastrado com sucesso')
       } else {
         if (!staffId) return
 
-        await reassignStaffRoleAction(staffId, Number(values.roleId))
-        toast.success('Papel atualizado com sucesso')
+        // Na edição a senha é opcional: em branco, mantém a atual. Só é enviada quando preenchida,
+        // e aí precisa respeitar o mesmo mínimo do cadastro.
+        if (values.password && values.password.length < 8) {
+          toast.error('A nova senha deve ter pelo menos 8 caracteres.')
+          return
+        }
+
+        // Dois endpoints porque são duas operações distintas no backend: os dados do colaborador
+        // (`PATCH /api/staff/:id`) e o papel (`PATCH /api/staff/:id/role`, que tem as próprias
+        // travas contra auto-escalação e contra deixar o sistema sem ninguém com `staff.manage`).
+        await updateStaffAction(staffId, {
+          name: values.name,
+          surname: values.surname,
+          email: values.email,
+          ...(values.password ? { password: values.password } : {})
+        })
+
+        if (initialValues && Number(values.roleId) !== initialValues.roleId) {
+          await reassignStaffRoleAction(staffId, Number(values.roleId))
+        }
+
+        toast.success('Colaborador atualizado com sucesso')
       }
 
       router.push('/team')
+      router.refresh()
     } catch {
-      toast.error(mode === 'create' ? 'Não foi possível cadastrar o staff.' : 'Não foi possível atualizar o papel.')
+      toast.error(
+        mode === 'create' ? 'Não foi possível cadastrar o colaborador.' : 'Não foi possível atualizar o colaborador.'
+      )
     }
   }
 
   return (
     <Grid component='form' noValidate onSubmit={handleSubmit(onSubmit)} container spacing={3} sx={{ p: 3 }}>
-      {mode === 'edit' && initialValues && (
-        <Grid size={{ xs: 12 }}>
-          <Typography variant='body1' sx={{ fontWeight: 500 }}>
-            {initialValues.name} {initialValues.surname}
-          </Typography>
-          <Typography variant='body2' color='text.secondary'>
-            {initialValues.email}
-          </Typography>
-          <Typography variant='caption' color='text.secondary'>
-            Nome, sobrenome e e-mail só podem ser alterados pelo próprio staff, em Configurações da conta.
-          </Typography>
-        </Grid>
-      )}
-
-      {mode === 'create' && (
-        <>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Controller
-              name='name'
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  label='Nome'
-                  fullWidth
-                  error={Boolean(errors.name)}
-                  helperText={errors.name?.message}
-                />
-              )}
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <Controller
+          name='name'
+          control={control}
+          render={({ field }) => (
+            <TextField {...field} label='Nome' fullWidth error={Boolean(errors.name)} helperText={errors.name?.message} />
+          )}
+        />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <Controller
+          name='surname'
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label='Sobrenome'
+              fullWidth
+              error={Boolean(errors.surname)}
+              helperText={errors.surname?.message}
             />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Controller
-              name='surname'
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  label='Sobrenome'
-                  fullWidth
-                  error={Boolean(errors.surname)}
-                  helperText={errors.surname?.message}
-                />
-              )}
+          )}
+        />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <Controller
+          name='email'
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label='E-mail'
+              type='email'
+              fullWidth
+              error={Boolean(errors.email)}
+              helperText={errors.email?.message}
             />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Controller
-              name='email'
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  label='E-mail'
-                  type='email'
-                  fullWidth
-                  error={Boolean(errors.email)}
-                  helperText={errors.email?.message}
-                />
-              )}
+          )}
+        />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <Controller
+          name='password'
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label={mode === 'create' ? 'Senha' : 'Nova senha'}
+              type='password'
+              autoComplete='new-password'
+              fullWidth
+              helperText={
+                mode === 'create'
+                  ? 'Mínimo de 8 caracteres.'
+                  : 'Deixe em branco para manter a senha atual. A senha atual não é necessária.'
+              }
             />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Controller
-              name='password'
-              control={control}
-              render={({ field }) => <TextField {...field} label='Senha' type='password' fullWidth />}
-            />
-          </Grid>
-        </>
-      )}
+          )}
+        />
+      </Grid>
 
       <Grid size={{ xs: 12, sm: 6 }}>
         <Controller
